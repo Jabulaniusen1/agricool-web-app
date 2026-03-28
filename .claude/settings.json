@@ -4,7 +4,11 @@
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)",
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)",
       "Read(//Users/mac/Desktop/Client projects/agricool/**)",
-      "Bash(npx create-next-app@latest agricool-web --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)"
+      "Bash(npx create-next-app@latest agricool-web --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)",
+      "Bash(cp -r \"/Users/mac/Desktop/Client projects/agricool/agricool-web/.\" \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/\")",
+      "Bash(rm -rf \"/Users/mac/Desktop/Client projects/agricool/agricool-web\")",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init --defaults)"
     ]
   }
 }
