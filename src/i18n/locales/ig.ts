@@ -1,0 +1,31 @@
+const ig = {
+  translation: {
+    dashboard: "Ihe ngosi",
+    coolingUnits: "Ngwa Oyi",
+    history: "Akụkọ ihe mere eme",
+    analytics: "Nyochaa",
+    marketplace: "Ahia",
+    marketPrice: "Ọnụahịa Ahịa",
+    management: "Njikwa",
+    account: "Akaụntụ",
+    notifications: "Ọkwa",
+    faq: "Ajụjụ ndị a na-ajụkarị",
+    logout: "Pụọ",
+    signIn: "Banye",
+    signUp: "Debanye aha",
+    email: "Email",
+    phone: "Ekwentị",
+    password: "Okwuntughe",
+    firstName: "Aha mbụ",
+    lastName: "Aha ezinụlọ",
+    save: "Chekwa",
+    cancel: "Kagbuo",
+    delete: "Hichapụ",
+    edit: "Dezie",
+    search: "Chọọ",
+    loading: "Na-abufe...",
+    noData: "Enweghị data",
+  },
+};
+
+export default ig;

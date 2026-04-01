@@ -1,0 +1,31 @@
+const yo = {
+  translation: {
+    dashboard: "Ìpamọ́",
+    coolingUnits: "Àwọn Ẹ̀rọ Ìtútù",
+    history: "Ìtàn",
+    analytics: "Àtúpalẹ̀",
+    marketplace: "Ọjà",
+    marketPrice: "Iye Ọjà",
+    management: "Ìṣàkóso",
+    account: "Àkọọ́lẹ̀",
+    notifications: "Ìfitónilétí",
+    faq: "Àwọn Ìbéèrè",
+    logout: "Jáde",
+    signIn: "Wọlé",
+    signUp: "Forúkọsílẹ̀",
+    email: "Ímeèlì",
+    phone: "Fóònù",
+    password: "Ọ̀rọ̀ Aṣínà",
+    firstName: "Orúkọ Àkọ́kọ́",
+    lastName: "Orúkọ Ẹbí",
+    save: "Fi pamọ́",
+    cancel: "Fagilé",
+    delete: "Pa rẹ́",
+    edit: "Àtúnṣe",
+    search: "Ṣàwárí",
+    loading: "Ìforúkọ...",
+    noData: "Kò sí dátà",
+  },
+};
+
+export default yo;

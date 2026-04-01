@@ -8,7 +8,26 @@
       "Bash(cp -r \"/Users/mac/Desktop/Client projects/agricool/agricool-web/.\" \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/\")",
       "Bash(rm -rf \"/Users/mac/Desktop/Client projects/agricool/agricool-web\")",
       "Bash(npm install:*)",
-      "Bash(npx shadcn@latest init --defaults)"
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npx shadcn@latest add card badge input label select textarea dialog sheet dropdown-menu avatar tabs table form toast sonner separator skeleton progress switch checkbox radio-group popover command scroll-area alert-dialog tooltip drawer)",
+      "Bash(npx shadcn@latest add card badge input label select textarea dialog sheet dropdown-menu avatar tabs table form sonner separator skeleton progress switch checkbox radio-group popover command scroll-area alert-dialog tooltip drawer --yes)",
+      "Bash(npx shadcn@latest add form input --yes)",
+      "Read(//Users/mac/Desktop/**)",
+      "Bash(ls \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/\\(dashboard\\)/cooling-units/\")",
+      "Bash(ls \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/\\(dashboard\\)/cooling-units/[id]/\")",
+      "Bash(ls \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/\\(dashboard\\)/history/\")",
+      "Bash(ls \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/\\(dashboard\\)/analytics/\")",
+      "Bash(npx tsc:*)",
+      "Bash(sed -n '86,92p' \"src/app/\\(auth\\)/sign-up/cooling-user/page.tsx\")",
+      "Bash(sed -n '100,106p' \"src/app/\\(auth\\)/sign-up/cooling-user/page.tsx\")",
+      "Bash(sed -n '153,160p' \"src/app/\\(dashboard\\)/management/analysis/page.tsx\")",
+      "Bash(sed -n '240,246p' \"src/app/\\(dashboard\\)/management/analysis/page.tsx\")",
+      "Bash(npm run:*)",
+      "Bash(find \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/\\(auth\\)\" -name \"*.tsx\")",
+      "Bash(find '/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/constants' -name *.ts)"
+    ],
+    "additionalDirectories": [
+      "/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/(dashboard)/cooling-units"
     ]
   }
 }

@@ -1,0 +1,31 @@
+const ha = {
+  translation: {
+    dashboard: "Allon",
+    coolingUnits: "Injunan Sanyaya",
+    history: "Tarihi",
+    analytics: "Nazari",
+    marketplace: "Kasuwa",
+    marketPrice: "Farashin Kasuwa",
+    management: "Gudanarwa",
+    account: "Asusun",
+    notifications: "Sanarwa",
+    faq: "Tambayoyi",
+    logout: "Fita",
+    signIn: "Shiga",
+    signUp: "Yi rajista",
+    email: "Imel",
+    phone: "Waya",
+    password: "Kalmar sirri",
+    firstName: "Sunan farko",
+    lastName: "Sunan iyali",
+    save: "Ajiye",
+    cancel: "Soke",
+    delete: "Share",
+    edit: "Gyara",
+    search: "Bincika",
+    loading: "Ana lodawa...",
+    noData: "Babu bayanai",
+  },
+};
+
+export default ha;

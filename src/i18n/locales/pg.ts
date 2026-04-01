@@ -1,0 +1,31 @@
+const pg = {
+  translation: {
+    dashboard: "Dashboard",
+    coolingUnits: "Cooling Units",
+    history: "History",
+    analytics: "Analytics",
+    marketplace: "Market",
+    marketPrice: "Market Price",
+    management: "Management",
+    account: "Account",
+    notifications: "Notifications",
+    faq: "FAQ",
+    logout: "Comot",
+    signIn: "Enter",
+    signUp: "Register",
+    email: "Email",
+    phone: "Phone",
+    password: "Password",
+    firstName: "First Name",
+    lastName: "Last Name",
+    save: "Save am",
+    cancel: "Forget am",
+    delete: "Komot am",
+    edit: "Change am",
+    search: "Find am",
+    loading: "E dey load...",
+    noData: "No data dey",
+  },
+};
+
+export default pg;
