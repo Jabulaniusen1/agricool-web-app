@@ -36,7 +36,14 @@ class AuthService {
     params: SignUpAsCoolingUserParams,
     recaptchaToken?: string
   ): Promise<SignUpAsCoolingUserResponse> {
-    const body = recaptchaToken ? { ...params, recaptchaToken } : params;
+    const { firstName, lastName, phone, password, country, language, coolingUnitId } = params;
+    const body = {
+      user: { firstName, lastName, phone, password, language, country },
+      parentName: "",
+      createUser: true,
+      ...(coolingUnitId !== undefined && { coolingUnitId }),
+      ...(recaptchaToken && { recaptchaToken }),
+    };
     const res = await httpClient.post<SignUpAsCoolingUserResponse>("/user/v1/farmers/", body);
     return res.data;
   }
