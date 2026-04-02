@@ -5,6 +5,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { User, Save, Camera } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,7 @@ import { coldtivateService } from "@/services/coldtivate-service";
 import { profileSchema, ProfileFormValues } from "@/constants/schemas";
 import { EApiGender } from "@/types/global";
 import { getInitials } from "@/lib/utils";
+import { LANGUAGE_KEY } from "@/i18n";
 
 const LANGUAGES = [
   { value: "en", label: "English" },
@@ -36,6 +39,7 @@ const LANGUAGES = [
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
+  const { i18n } = useTranslation();
   const [saving, setSaving] = useState(false);
 
   const {
@@ -70,6 +74,10 @@ export default function ProfilePage() {
         language: values.language,
       });
       updateUser(updated);
+      const selectedLanguage = values.language ?? "en";
+      i18n.changeLanguage(selectedLanguage);
+      localStorage.setItem(LANGUAGE_KEY, selectedLanguage);
+      document.documentElement.lang = selectedLanguage;
       toast.success("Profile updated successfully");
     } catch {
       toast.error("Failed to update profile");

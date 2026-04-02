@@ -7,7 +7,6 @@ import { useAuthStore } from "@/stores/auth";
 import { authService } from "@/services/auth-service";
 import { ERoles } from "@/types/global";
 import { ROUTES } from "@/constants/routes";
-import { toast } from "sonner";
 import {
   LayoutDashboard,
   Thermometer,
@@ -35,6 +34,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { getInitials } from "@/lib/utils";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 type NavItem = {
   label: string;
@@ -42,12 +43,6 @@ type NavItem = {
   icon: React.ElementType;
   roles?: ERoles[];
   badge?: number;
-};
-
-type NavGroup = {
-  title?: string;
-  items: NavItem[];
-  roles?: ERoles[];
 };
 
 function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
@@ -90,6 +85,7 @@ export function Sidebar({
   const router = useRouter();
   const [managementOpen, setManagementOpen] = useState(true);
   const role = user?.role;
+  const { t } = useTranslation();
 
   const isServiceProvider = role === ERoles.SERVICE_PROVIDER;
   const isOperator = role === ERoles.OPERATOR;
@@ -104,36 +100,38 @@ export function Sidebar({
       // ignore logout errors
     } finally {
       revokeSession();
+      document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
       router.replace(ROUTES.SIGN_IN);
+      router.refresh();
     }
   };
 
   const mainNav: NavItem[] = [
-    { label: "Dashboard", href: ROUTES.DASHBOARD, icon: LayoutDashboard },
-    { label: "Cooling Units", href: ROUTES.COOLING_UNITS, icon: Thermometer },
-    { label: "History", href: ROUTES.HISTORY, icon: History },
-    { label: "Analytics", href: ROUTES.ANALYTICS, icon: BarChart3 },
-    { label: "Marketplace", href: ROUTES.MARKETPLACE, icon: ShoppingBag },
-    { label: "Market Price", href: ROUTES.MARKET_PRICE, icon: TrendingUp },
+    { label: t("dashboard"), href: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { label: t("coolingUnits"), href: ROUTES.COOLING_UNITS, icon: Thermometer },
+    { label: t("history"), href: ROUTES.HISTORY, icon: History },
+    { label: t("analytics"), href: ROUTES.ANALYTICS, icon: BarChart3 },
+    { label: t("marketplace"), href: ROUTES.MARKETPLACE, icon: ShoppingBag },
+    { label: t("marketPrice"), href: ROUTES.MARKET_PRICE, icon: TrendingUp },
   ];
 
   const managementNav: NavItem[] = [
-    { label: "Cooling Units", href: ROUTES.MANAGEMENT_COOLING_UNITS, icon: Thermometer },
-    { label: "Locations", href: ROUTES.MANAGEMENT_LOCATIONS, icon: MapPin },
-    { label: "Users", href: ROUTES.MANAGEMENT_USERS, icon: Users },
-    { label: "Company", href: ROUTES.MANAGEMENT_COMPANY, icon: Building2 },
-    { label: "Analysis", href: ROUTES.MANAGEMENT_ANALYSIS, icon: PieChart },
+    { label: t("coolingUnits"), href: ROUTES.MANAGEMENT_COOLING_UNITS, icon: Thermometer },
+    { label: t("locations"), href: ROUTES.MANAGEMENT_LOCATIONS, icon: MapPin },
+    { label: t("users"), href: ROUTES.MANAGEMENT_USERS, icon: Users },
+    { label: t("company"), href: ROUTES.MANAGEMENT_COMPANY, icon: Building2 },
+    { label: t("analysis"), href: ROUTES.MANAGEMENT_ANALYSIS, icon: PieChart },
   ];
 
   const accountNav: NavItem[] = [
-    { label: "Profile", href: ROUTES.ACCOUNT_PROFILE, icon: User },
-    { label: "Bank Details", href: ROUTES.ACCOUNT_BANK_DETAILS, icon: CreditCard },
-    ...(isServiceProvider ? [{ label: "Coupons", href: ROUTES.ACCOUNT_COUPONS, icon: Tag }] : []),
+    { label: t("profile"), href: ROUTES.ACCOUNT_PROFILE, icon: User },
+    { label: t("bankDetails"), href: ROUTES.ACCOUNT_BANK_DETAILS, icon: CreditCard },
+    ...(isServiceProvider ? [{ label: t("coupons"), href: ROUTES.ACCOUNT_COUPONS, icon: Tag }] : []),
   ];
 
   const helpNav: NavItem[] = [
-    { label: "Notifications", href: ROUTES.NOTIFICATIONS, icon: Bell, badge: unreadCount },
-    { label: "FAQ", href: ROUTES.FAQ, icon: HelpCircle },
+    { label: t("notifications"), href: ROUTES.NOTIFICATIONS, icon: Bell, badge: unreadCount },
+    { label: t("faq"), href: ROUTES.FAQ, icon: HelpCircle },
   ];
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : "User";
@@ -158,7 +156,7 @@ export function Sidebar({
         {!collapsed && (
           <div>
             <span className="font-bold text-sm">Agricool</span>
-            <span className="text-xs text-muted-foreground block">Coldtivate</span>
+            <span className="text-xs text-muted-foreground block">Agrisens</span>
           </div>
         )}
       </div>
@@ -198,7 +196,7 @@ export function Sidebar({
 
         {/* Account */}
         <div className="space-y-1">
-          {!collapsed && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Account</p>}
+          {!collapsed && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">{t("account")}</p>}
           {accountNav.map((item) => (
             <NavLink key={item.href} item={item} collapsed={collapsed} />
           ))}
@@ -241,7 +239,7 @@ export function Sidebar({
           )}
         >
           <LogOut size={16} />
-          {!collapsed && <span>Logout</span>}
+          {!collapsed && <span>{t("logout")}</span>}
         </button>
       </div>
     </aside>

@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -39,8 +38,6 @@ import { coldtivateService } from "@/services/coldtivate-service";
 import { PredictionGraphData, PredictionParams } from "@/types/global";
 import { formatDate } from "@/lib/utils";
 
-type Region = "nigeria" | "india";
-
 function ChartSkeleton() {
   return (
     <div className="space-y-4">
@@ -54,15 +51,6 @@ function ChartSkeleton() {
 }
 
 function PriceChart({ data }: { data: PredictionGraphData }) {
-  const actualData = data.series
-    .filter((d) => !d.predicted)
-    .map((d) => ({ date: d.date, actual: d.price }));
-
-  const predictedData = data.series
-    .filter((d) => d.predicted)
-    .map((d) => ({ date: d.date, predicted: d.price }));
-
-  // Merge for chart — keep a unified date axis
   const mergedMap: Record<string, { date: string; actual?: number; predicted?: number }> = {};
   data.series.forEach((d) => {
     if (!mergedMap[d.date]) mergedMap[d.date] = { date: d.date };
@@ -163,7 +151,7 @@ function PriceTable({ data }: { data: PredictionGraphData }) {
   );
 }
 
-function RegionPanel({ region }: { region: Region }) {
+function RegionPanel() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [params, setParams] = useState<PredictionParams | null>(null);
   const [paramsLoading, setParamsLoading] = useState(true);
@@ -176,10 +164,7 @@ function RegionPanel({ region }: { region: Region }) {
   const fetchParams = useCallback(async () => {
     setParamsLoading(true);
     try {
-      const result =
-        region === "nigeria"
-          ? await coldtivateService.getPredictionParamsNigeria()
-          : await coldtivateService.getPredictionParamsIndia();
+      const result = await coldtivateService.getPredictionParamsNigeria();
       setParams(result);
       if (result.crops[0]) setSelectedCrop(result.crops[0]);
       if (result.states[0]) setSelectedState(result.states[0]);
@@ -188,7 +173,7 @@ function RegionPanel({ region }: { region: Region }) {
     } finally {
       setParamsLoading(false);
     }
-  }, [region]);
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -199,23 +184,17 @@ function RegionPanel({ region }: { region: Region }) {
     if (!selectedCrop || !selectedState) return;
     setDataLoading(true);
     try {
-      const result =
-        region === "nigeria"
-          ? await coldtivateService.getPredictionGraphNigeria({
-              crop: selectedCrop,
-              state: selectedState,
-            })
-          : await coldtivateService.getPredictionGraphIndia({
-              crop: selectedCrop,
-              state: selectedState,
-            });
+      const result = await coldtivateService.getPredictionGraphNigeria({
+        crop: selectedCrop,
+        state: selectedState,
+      });
       setGraphData(result);
     } catch {
       setGraphData(null);
     } finally {
       setDataLoading(false);
     }
-  }, [region, selectedCrop, selectedState]);
+  }, [selectedCrop, selectedState]);
 
   useEffect(() => {
     fetchGraph();
@@ -334,32 +313,17 @@ function RegionPanel({ region }: { region: Region }) {
 export default function MarketPricePage() {
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h2 className="text-xl font-bold flex items-center gap-2">
           <TrendingUp size={20} className="text-green-600" />
           Market Price Predictions
         </h2>
         <p className="text-muted-foreground text-sm mt-0.5">
-          AI-powered crop price forecasts by region
+          AI-powered crop price forecasts for Nigeria
         </p>
       </div>
 
-      {/* Region tabs */}
-      <Tabs defaultValue="nigeria">
-        <TabsList>
-          <TabsTrigger value="nigeria">Nigeria</TabsTrigger>
-          <TabsTrigger value="india">India</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="nigeria" className="mt-4">
-          <RegionPanel region="nigeria" />
-        </TabsContent>
-
-        <TabsContent value="india" className="mt-4">
-          <RegionPanel region="india" />
-        </TabsContent>
-      </Tabs>
+      <RegionPanel />
     </div>
   );
 }

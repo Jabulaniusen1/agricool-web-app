@@ -19,7 +19,18 @@ import { authService } from "@/services/auth-service";
 import { useAuthStore } from "@/stores/auth";
 import { ROUTES } from "@/constants/routes";
 
-const COUNTRIES = ["Nigeria", "India", "Ghana", "Kenya", "Rwanda", "Tanzania", "Uganda"];
+const NIGERIAN_CITIES = [
+  "Lagos",
+  "Kano",
+  "Abuja",
+  "Ibadan",
+  "Port Harcourt",
+  "Kaduna",
+  "Benin City",
+  "Maiduguri",
+  "Aba",
+  "Jos",
+];
 const LANGUAGES = [
   { value: "en", label: "English" },
   { value: "yo", label: "Yoruba" },
@@ -32,6 +43,7 @@ export default function SignUpCoolingUserPage() {
   const router = useRouter();
   const { setSession } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [city, setCity] = useState("");
 
   const {
     register,
@@ -40,13 +52,19 @@ export default function SignUpCoolingUserPage() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(signUpCoolingUserSchema),
-    defaultValues: { language: "en" },
+    defaultValues: { language: "en", country: "Nigeria" },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (values: any) => {
     try {
-      const res = await authService.signUpAsCoolingUser(values);
+      const normalizedPhone =
+        values.phone.startsWith("+") ? values.phone : `+234${values.phone.replace(/^0+/, "")}`;
+      const res = await authService.signUpAsCoolingUser({
+        ...values,
+        phone: normalizedPhone,
+        country: "Nigeria",
+      });
       setSession({ access: res.access, refresh: res.refresh }, res.user);
       toast.success("Account created successfully!");
       router.replace(ROUTES.DASHBOARD);
@@ -85,18 +103,18 @@ export default function SignUpCoolingUserPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Country</Label>
-              <Select onValueChange={(v) => v && setValue("country", v as string)}>
+              <Label>City</Label>
+              <Select value={city} onValueChange={(v) => setCity(v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select city" />
                 </SelectTrigger>
                 <SelectContent>
-                  {COUNTRIES.map((c) => (
+                  {NIGERIAN_CITIES.map((c) => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.country && <p className="text-xs text-destructive">{errors.country.message}</p>}
+              <p className="text-[11px] text-muted-foreground">Country is fixed to Nigeria.</p>
             </div>
             <div className="space-y-2">
               <Label>Language</Label>

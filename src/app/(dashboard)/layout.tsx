@@ -8,34 +8,28 @@ import { AbilityProvider } from "@/lib/ability-context";
 import { useAuthStore } from "@/stores/auth";
 import { useNotifications } from "@/hooks/use-notifications";
 import { ROUTES } from "@/constants/routes";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/cooling-units": "Cooling Units",
-  "/cooling-units/maps": "Cooling Unit Map",
-  "/history": "Movement History",
-  "/analytics": "Analytics",
-  "/marketplace": "Marketplace",
-  "/marketplace/cart": "Shopping Cart",
-  "/marketplace/orders": "My Orders",
-  "/marketplace/sales": "Sales",
-  "/market-price": "Market Price",
-  "/management/cooling-units": "Manage Cooling Units",
-  "/management/locations": "Manage Locations",
-  "/management/users": "Manage Users",
-  "/management/company": "Company Settings",
-  "/management/analysis": "Revenue Analysis",
-  "/account/profile": "My Profile",
-  "/account/bank-details": "Bank Details",
-  "/account/coupons": "Coupons",
-  "/notifications": "Notifications",
-  "/faq": "FAQ",
+const PAGE_TITLE_KEYS: Record<string, string> = {
+  "/dashboard": "dashboard",
+  "/cooling-units": "coolingUnits",
+  "/history": "history",
+  "/analytics": "analytics",
+  "/marketplace": "marketplace",
+  "/market-price": "marketPrice",
+  "/account/profile": "profile",
+  "/account/bank-details": "bankDetails",
+  "/account/coupons": "coupons",
+  "/notifications": "notifications",
+  "/faq": "faq",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { data: notifications } = useNotifications();
@@ -49,7 +43,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!isAuthenticated) return null;
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
-  const title = PAGE_TITLES[pathname] ?? "Agricool";
+  const titleKey = PAGE_TITLE_KEYS[pathname];
+  const title = titleKey ? t(titleKey) : "Agricool";
 
   return (
     <AbilityProvider>

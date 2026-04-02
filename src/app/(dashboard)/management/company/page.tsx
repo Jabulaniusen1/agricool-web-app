@@ -24,7 +24,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { useCompanies } from "@/hooks/use-companies";
 import { coldtivateService } from "@/services/coldtivate-service";
-import { useAuthStore } from "@/stores/auth";
 import { Company } from "@/types/global";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -36,11 +35,8 @@ type CompanyFormValues = {
   crop: number[];
 };
 
-const CURRENCIES = ["NGN", "USD", "GHS", "KES", "ZAR", "INR", "EUR", "GBP"];
-const COUNTRIES = [
-  "Nigeria", "Ghana", "Kenya", "South Africa", "India",
-  "Ethiopia", "Tanzania", "Uganda", "Rwanda", "Senegal",
-];
+const CURRENCIES = ["NGN", "USD", "EUR", "GBP"];
+const COUNTRIES = ["Nigeria"];
 const CROPS = [
   { id: 1, name: "Tomato" },
   { id: 2, name: "Pepper" },

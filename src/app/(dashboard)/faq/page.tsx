@@ -39,7 +39,7 @@ const FAQ_ITEMS = [
   {
     question: "What types of sensors are supported?",
     answer:
-      "Coldtivate supports a range of IoT temperature and humidity sensors. Currently integrated sensor sources include Ecozen and other compatible MQTT/HTTP-based sensors. You can test sensor connectivity from the cooling unit settings page and assign sensors to specific units.",
+      "Agricool supports a range of IoT temperature and humidity sensors. Currently integrated sensor sources include Ecozen and other compatible MQTT/HTTP-based sensors. You can test sensor connectivity from the cooling unit settings page and assign sensors to specific units.",
   },
   {
     question: "How do I read and respond to temperature alerts?",
@@ -85,7 +85,7 @@ export default function FAQPage() {
           Frequently Asked Questions
         </h2>
         <p className="text-muted-foreground text-sm mt-0.5">
-          Common questions about using the Coldtivate platform
+          Common questions about using the Agricool platform
         </p>
       </div>
 
@@ -100,7 +100,7 @@ export default function FAQPage() {
       <p className="text-sm text-muted-foreground text-center">
         Still have questions?{" "}
         <a
-          href="mailto:support@coldtivate.com"
+          href="mailto:contact@agrisens.ng"
           className="text-green-600 hover:underline font-medium"
         >
           Contact support

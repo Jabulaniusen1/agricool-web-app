@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Menu, Moon, Sun, Globe, ChevronDown, LogOut, User } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -59,14 +59,26 @@ export function Header({
       // ignore
     } finally {
       revokeSession();
+      document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
       router.replace(ROUTES.SIGN_IN);
+      router.refresh();
     }
   };
 
   const handleLanguageChange = (lang: string) => {
     i18n.changeLanguage(lang);
     localStorage.setItem(LANGUAGE_KEY, lang);
+    document.documentElement.lang = lang;
   };
+
+  useEffect(() => {
+    const preferredLang = user?.language ?? localStorage.getItem(LANGUAGE_KEY) ?? "en";
+    if (preferredLang && i18n.language !== preferredLang) {
+      i18n.changeLanguage(preferredLang);
+    }
+    localStorage.setItem(LANGUAGE_KEY, preferredLang);
+    document.documentElement.lang = preferredLang;
+  }, [i18n, user?.language]);
 
   return (
     <>
@@ -86,7 +98,7 @@ export function Header({
           <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
             <Globe size={16} />
             <span className="hidden sm:inline uppercase text-xs">
-              {i18n.language.toUpperCase()}
+              {i18n.language.split("-")[0].toUpperCase()}
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -153,12 +165,12 @@ export function Header({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push(ROUTES.ACCOUNT_PROFILE)}>
               <User size={14} className="mr-2" />
-              Profile
+              {i18n.t("profile")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut size={14} className="mr-2" />
-              Logout
+              {i18n.t("logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

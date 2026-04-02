@@ -24,7 +24,23 @@ class AuthService {
     params: SignUpAsCompanyParams,
     recaptchaToken?: string
   ): Promise<SignUpAsCompanyResponse> {
-    const body = recaptchaToken ? { ...params, recaptchaToken } : params;
+    const { firstName, lastName, email, phone, password, companyName, country, language } = params;
+    const body = {
+      user: {
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        language,
+        country,
+      },
+      company: {
+        name: companyName,
+        country,
+      },
+      ...(recaptchaToken && { recaptchaToken }),
+    };
     const res = await httpClient.post<SignUpAsCompanyResponse>(
       "/user/v1/service-provider-signup/",
       body
