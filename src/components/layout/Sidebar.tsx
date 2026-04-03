@@ -31,7 +31,6 @@ import {
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { getInitials } from "@/lib/utils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,10 +52,10 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
         isActive
-          ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
-          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          ? "bg-green-500/10 text-green-400"
+          : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
       )}
     >
       <item.icon size={18} className="shrink-0" />
@@ -64,7 +63,7 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
         <>
           <span className="flex-1 truncate">{item.label}</span>
           {item.badge != null && item.badge > 0 && (
-            <Badge variant="destructive" className="h-5 min-w-5 text-xs px-1">
+            <Badge className="h-5 min-w-5 text-xs px-1 bg-red-500/20 text-red-400 border-0">
               {item.badge > 99 ? "99+" : item.badge}
             </Badge>
           )}
@@ -101,8 +100,7 @@ export function Sidebar({
     } finally {
       revokeSession();
       document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-      router.replace(ROUTES.SIGN_IN);
-      router.refresh();
+      window.location.replace(ROUTES.SIGN_IN);
     }
   };
 
@@ -140,12 +138,12 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "flex flex-col h-full bg-card border-r transition-all duration-300",
+        "flex flex-col h-full bg-gray-950 border-r border-gray-800 transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-800">
         <Image
           src="/agricool_logo.png"
           alt="Agricool"
@@ -155,17 +153,17 @@ export function Sidebar({
         />
         {!collapsed && (
           <div>
-            <span className="font-bold text-sm">Agricool</span>
-            <span className="text-xs text-muted-foreground block">Agrisens</span>
+            <span className="font-bold text-sm text-white">Agricool</span>
+            <span className="text-[11px] text-gray-500 block">Agrisens</span>
           </div>
         )}
       </div>
 
       {/* Nav links */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-5">
         {/* Main */}
         <div className="space-y-1">
-          {!collapsed && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Main</p>}
+          {!collapsed && <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">Main</p>}
           {mainNav.map((item) => (
             <NavLink key={item.href} item={item} collapsed={collapsed} />
           ))}
@@ -177,7 +175,7 @@ export function Sidebar({
             {!collapsed && (
               <button
                 onClick={() => setManagementOpen(!managementOpen)}
-                className="flex items-center gap-2 w-full text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2 hover:text-foreground"
+                className="flex items-center gap-2 w-full text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2 hover:text-gray-400 transition-colors"
               >
                 <Settings size={12} />
                 <span className="flex-1 text-left">Management</span>
@@ -196,7 +194,7 @@ export function Sidebar({
 
         {/* Account */}
         <div className="space-y-1">
-          {!collapsed && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">{t("account")}</p>}
+          {!collapsed && <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">{t("account")}</p>}
           {accountNav.map((item) => (
             <NavLink key={item.href} item={item} collapsed={collapsed} />
           ))}
@@ -204,27 +202,27 @@ export function Sidebar({
 
         {/* Help */}
         <div className="space-y-1">
-          {!collapsed && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Help</p>}
+          {!collapsed && <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">Help</p>}
           {helpNav.map((item) => (
             <NavLink key={item.href} item={item} collapsed={collapsed} />
           ))}
         </div>
       </nav>
 
-      <Separator />
+      <div className="border-t border-gray-800" />
 
       {/* User info + logout */}
-      <div className="px-3 py-4 space-y-2">
-        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
+      <div className="px-2 py-3 space-y-1">
+        <div className={cn("flex items-center gap-3 px-3 py-2 rounded-lg", collapsed && "justify-center")}>
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-green-100 text-green-700 text-xs font-bold">
+            <AvatarFallback className="bg-green-900/60 text-green-400 text-xs font-bold">
               {getInitials(fullName)}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{fullName}</p>
-              <p className="text-xs text-muted-foreground truncate capitalize">
+              <p className="text-sm font-medium text-gray-200 truncate">{fullName}</p>
+              <p className="text-xs text-gray-500 truncate capitalize">
                 {roleLabel.toLowerCase()}
               </p>
             </div>
@@ -234,7 +232,7 @@ export function Sidebar({
         <button
           onClick={handleLogout}
           className={cn(
-            "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors",
+            "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors",
             collapsed && "justify-center px-0"
           )}
         >

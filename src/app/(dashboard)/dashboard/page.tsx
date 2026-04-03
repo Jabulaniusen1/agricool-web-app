@@ -45,7 +45,7 @@ function ProduceCard({ produce, onCheckOut }: { produce: DashboardProduce; onChe
   const shelfLifePercent = Math.min(100, (produce.minimumRemainingShelfLife / 30) * 100);
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-lg hover:border-green-200 dark:hover:border-green-800/40 transition-all duration-200">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
@@ -86,15 +86,15 @@ function ProduceCard({ produce, onCheckOut }: { produce: DashboardProduce; onChe
 
         {/* Stats grid */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="text-center p-2 bg-muted rounded-lg">
+          <div className="text-center p-2 bg-green-50/60 dark:bg-green-900/10 rounded-lg">
             <p className="text-sm font-bold">{produce.cratesAmount}</p>
             <p className="text-xs text-muted-foreground">Crates</p>
           </div>
-          <div className="text-center p-2 bg-muted rounded-lg">
+          <div className="text-center p-2 bg-green-50/60 dark:bg-green-900/10 rounded-lg">
             <p className="text-sm font-bold">{formatWeight(produce.cratesCombinedWeight)}</p>
             <p className="text-xs text-muted-foreground">Weight</p>
           </div>
-          <div className="text-center p-2 bg-muted rounded-lg">
+          <div className="text-center p-2 bg-green-50/60 dark:bg-green-900/10 rounded-lg">
             <div className="flex items-center justify-center gap-1">
               <Clock size={12} className="text-muted-foreground" />
               <p className="text-sm font-bold">{produce.currentStorageDays}d</p>
@@ -112,9 +112,9 @@ function ProduceCard({ produce, onCheckOut }: { produce: DashboardProduce; onChe
           <Progress
             value={shelfLifePercent}
             className={cn(
-              "h-1.5",
+              "h-2 rounded-full",
               shelfLifePercent > 50 ? "[&>div]:bg-green-500" :
-              shelfLifePercent > 25 ? "[&>div]:bg-yellow-500" : "[&>div]:bg-red-500"
+              shelfLifePercent > 25 ? "[&>div]:bg-amber-500" : "[&>div]:bg-red-500"
             )}
           />
         </div>
@@ -246,34 +246,38 @@ export default function DashboardPage() {
               label: "Total Produces",
               value: produces.length,
               icon: Package,
-              color: "text-green-600 bg-green-50",
+              color: "text-green-600 bg-green-50 dark:bg-green-900/20",
+              accent: "border-t-green-500",
             },
             {
               label: "Total Weight",
               value: formatWeight(produces.reduce((s, p) => s + p.cratesCombinedWeight, 0)),
               icon: ChevronDown,
-              color: "text-blue-600 bg-blue-50",
+              color: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",
+              accent: "border-t-blue-500",
             },
             {
               label: "Total Crates",
               value: produces.reduce((s, p) => s + p.cratesAmount, 0),
               icon: Package,
-              color: "text-purple-600 bg-purple-50",
+              color: "text-violet-600 bg-violet-50 dark:bg-violet-900/20",
+              accent: "border-t-violet-500",
             },
             {
               label: "Avg. Storage Days",
               value: `${Math.round(produces.reduce((s, p) => s + p.currentStorageDays, 0) / produces.length)}d`,
               icon: Clock,
-              color: "text-orange-600 bg-orange-50",
+              color: "text-amber-600 bg-amber-50 dark:bg-amber-900/20",
+              accent: "border-t-amber-500",
             },
           ].map((stat) => (
-            <Card key={stat.label}>
+            <Card key={stat.label} className={cn("border-t-2", stat.accent)}>
               <CardContent className="p-4 flex items-center gap-3">
-                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", stat.color)}>
-                  <stat.icon size={18} />
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", stat.color)}>
+                  <stat.icon size={19} />
                 </div>
                 <div>
-                  <p className="text-lg font-bold">{stat.value}</p>
+                  <p className="text-xl font-bold tracking-tight leading-none mb-0.5">{stat.value}</p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
               </CardContent>
@@ -284,7 +288,7 @@ export default function DashboardPage() {
 
       {/* No cooling unit selected */}
       {!selectedCoolingUnitId && !cuLoading && (
-        <Card className="border-dashed">
+        <Card className="border-dashed bg-linear-to-br from-green-50/40 to-emerald-50/30 dark:from-green-900/5 dark:to-emerald-900/5">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Thermometer className="text-muted-foreground mb-3" size={40} />
             <h3 className="font-semibold mb-1">Select a Cooling Unit</h3>
@@ -306,7 +310,7 @@ export default function DashboardPage() {
 
         {!producesLoading && produces?.length === 0 && selectedCoolingUnitId && (
           <div className="col-span-full">
-            <Card className="border-dashed">
+            <Card className="border-dashed bg-linear-to-br from-green-50/40 to-emerald-50/30 dark:from-green-900/5 dark:to-emerald-900/5">
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Package className="text-muted-foreground mb-3" size={40} />
                 <h3 className="font-semibold mb-1">No produces in storage</h3>

@@ -24,7 +24,8 @@
       "Bash(sed -n '240,246p' \"src/app/\\(dashboard\\)/management/analysis/page.tsx\")",
       "Bash(npm run:*)",
       "Bash(find \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/\\(auth\\)\" -name \"*.tsx\")",
-      "Bash(find '/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/constants' -name *.ts)"
+      "Bash(find '/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/constants' -name *.ts)",
+      "Bash(xargs ls:*)"
     ],
     "additionalDirectories": [
       "/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/(dashboard)/cooling-units"

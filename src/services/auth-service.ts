@@ -8,8 +8,6 @@ import {
 } from "@/types/api.params";
 import {
   SignInResponse,
-  SignUpAsCompanyResponse,
-  SignUpAsCoolingUserResponse,
   RefreshSessionResponse,
 } from "@/types/api.responses";
 
@@ -23,45 +21,33 @@ class AuthService {
   async signUpAsCompany(
     params: SignUpAsCompanyParams,
     recaptchaToken?: string
-  ): Promise<SignUpAsCompanyResponse> {
-    const { firstName, lastName, email, phone, password, companyName, country, language } = params;
+  ): Promise<SignInResponse> {
+    const { firstName, lastName, email, phone, password, companyName, language } = params;
     const body = {
-      user: {
-        firstName,
-        lastName,
-        email,
-        phone,
-        password,
-        language,
-        country,
-      },
-      company: {
-        name: companyName,
-        country,
-      },
+      user: { firstName, lastName, email, phone, password, language },
+      company: { name: companyName, country: "NG", currency: "NGN" },
       ...(recaptchaToken && { recaptchaToken }),
     };
-    const res = await httpClient.post<SignUpAsCompanyResponse>(
-      "/user/v1/service-provider-signup/",
-      body
-    );
-    return res.data;
+    await httpClient.post("/user/v1/service-provider-signup/", body);
+    // Backend signup doesn't return tokens — auto-login to get a valid session
+    return this.signIn({ username: email, password, userType: "sp" });
   }
 
   async signUpAsCoolingUser(
     params: SignUpAsCoolingUserParams,
     recaptchaToken?: string
-  ): Promise<SignUpAsCoolingUserResponse> {
-    const { firstName, lastName, phone, password, country, language, coolingUnitId } = params;
+  ): Promise<SignInResponse> {
+    const { firstName, lastName, phone, password, language, coolingUnitId } = params;
     const body = {
-      user: { firstName, lastName, phone, password, language, country },
+      user: { firstName, lastName, phone, password, language, country: "NG" },
       parentName: "",
       createUser: true,
       ...(coolingUnitId !== undefined && { coolingUnitId }),
       ...(recaptchaToken && { recaptchaToken }),
     };
-    const res = await httpClient.post<SignUpAsCoolingUserResponse>("/user/v1/farmers/", body);
-    return res.data;
+    await httpClient.post("/user/v1/farmers/", body);
+    // Backend signup doesn't return tokens — auto-login to get a valid session
+    return this.signIn({ username: phone, password, userType: "f" });
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshSessionResponse> {

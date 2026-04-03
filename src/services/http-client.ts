@@ -47,20 +47,27 @@ function extractApiError(error: AxiosError): ApiError {
     return { message: nonFieldErrors[0], status, details: data as Record<string, string[]> };
   }
 
-  // Collect field errors
+  // Collect field errors — including nested objects like { user: { phone: ["..."] } }
   const fieldErrors: Record<string, string[]> = {};
   let firstMessage = "An error occurred";
   let hasFirstMessage = false;
 
-  for (const [key, value] of Object.entries(data)) {
-    if (Array.isArray(value)) {
-      fieldErrors[key] = value as string[];
-      if (!hasFirstMessage) {
-        firstMessage = `${key}: ${value[0]}`;
-        hasFirstMessage = true;
+  function collectErrors(obj: Record<string, unknown>, prefix = "") {
+    for (const [key, value] of Object.entries(obj)) {
+      const fullKey = prefix ? `${prefix}.${key}` : key;
+      if (Array.isArray(value) && value.length > 0) {
+        fieldErrors[fullKey] = value as string[];
+        if (!hasFirstMessage) {
+          firstMessage = String(value[0]);
+          hasFirstMessage = true;
+        }
+      } else if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+        collectErrors(value as Record<string, unknown>, fullKey);
       }
     }
   }
+
+  collectErrors(data);
 
   return { message: firstMessage, status, details: fieldErrors };
 }

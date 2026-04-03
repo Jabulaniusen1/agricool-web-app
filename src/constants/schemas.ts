@@ -15,7 +15,6 @@ export const signUpCompanySchema = z.object({
   phone: z.string().min(7, "Valid phone number is required"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   companyName: z.string().min(1, "Company name is required"),
-  country: z.string().min(1, "Country is required"),
   language: z.string().default("en"),
 });
 
@@ -24,7 +23,6 @@ export const signUpCoolingUserSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   phone: z.string().min(7, "Valid phone number is required"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  country: z.string().min(1, "Country is required"),
   language: z.string().default("en"),
   coolingUnitId: z.number().optional(),
 });

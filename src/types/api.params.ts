@@ -15,7 +15,6 @@ export type SignUpAsCompanyParams = {
   phone: string;
   password: string;
   companyName: string;
-  country: string;
   language: string;
 };
 
@@ -24,7 +23,6 @@ export type SignUpAsCoolingUserParams = {
   lastName: string;
   phone: string;
   password: string;
-  country: string;
   language: string;
   coolingUnitId?: number;
 };

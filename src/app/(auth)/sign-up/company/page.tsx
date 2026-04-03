@@ -19,18 +19,6 @@ import { authService } from "@/services/auth-service";
 import { useAuthStore } from "@/stores/auth";
 import { ROUTES } from "@/constants/routes";
 
-const NIGERIAN_CITIES = [
-  "Lagos",
-  "Kano",
-  "Abuja",
-  "Ibadan",
-  "Port Harcourt",
-  "Kaduna",
-  "Benin City",
-  "Maiduguri",
-  "Aba",
-  "Jos",
-];
 const LANGUAGES = [
   { value: "en", label: "English" },
   { value: "yo", label: "Yoruba" },
@@ -43,7 +31,6 @@ export default function SignUpCompanyPage() {
   const router = useRouter();
   const { setSession } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
-  const [city, setCity] = useState("");
 
   const {
     register,
@@ -52,7 +39,7 @@ export default function SignUpCompanyPage() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(signUpCompanySchema),
-    defaultValues: { language: "en", country: "Nigeria" },
+    defaultValues: { language: "en" },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +50,6 @@ export default function SignUpCompanyPage() {
       const res = await authService.signUpAsCompany({
         ...values,
         phone: normalizedPhone,
-        country: "Nigeria",
       });
       setSession({ access: res.access, refresh: res.refresh }, res.user);
       toast.success("Account created successfully!");
@@ -109,38 +95,34 @@ export default function SignUpCompanyPage() {
 
           <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" placeholder="+234..." {...register("phone")} />
+            <div className="flex">
+              <span className="inline-flex items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-sm text-muted-foreground select-none">
+                +234
+              </span>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="8012345678"
+                autoComplete="tel"
+                className="rounded-l-none"
+                {...register("phone")}
+              />
+            </div>
             {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>City</Label>
-              <Select value={city} onValueChange={(v) => setCity(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select city" />
-                </SelectTrigger>
-                <SelectContent>
-                  {NIGERIAN_CITIES.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-muted-foreground">Country is fixed to Nigeria.</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Language</Label>
-              <Select defaultValue="en" onValueChange={(v) => v && setValue("language", v as string)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>Language</Label>
+            <Select defaultValue="en" onValueChange={(v) => v && setValue("language", v as string)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((l) => (
+                  <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

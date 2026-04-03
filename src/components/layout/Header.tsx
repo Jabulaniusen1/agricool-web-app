@@ -60,8 +60,7 @@ export function Header({
     } finally {
       revokeSession();
       document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-      router.replace(ROUTES.SIGN_IN);
-      router.refresh();
+      window.location.replace(ROUTES.SIGN_IN);
     }
   };
 
@@ -82,7 +81,7 @@ export function Header({
 
   return (
     <>
-      <header className="h-16 border-b bg-card flex items-center gap-4 px-4 shrink-0">
+      <header className="h-14 border-b bg-background/95 backdrop-blur-sm shadow-sm flex items-center gap-4 px-4 shrink-0">
         <Button variant="ghost" size="icon" onClick={onMenuToggle} className="lg:hidden">
           <Menu size={20} />
         </Button>
@@ -148,7 +147,7 @@ export function Header({
         <DropdownMenu>
           <DropdownMenuTrigger className="inline-flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-muted transition-colors">
             <Avatar className="h-7 w-7">
-              <AvatarFallback className="bg-green-100 text-green-700 text-xs font-bold">
+              <AvatarFallback className="bg-green-600 text-white text-xs font-bold">
                 {getInitials(fullName)}
               </AvatarFallback>
             </Avatar>
