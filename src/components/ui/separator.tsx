@@ -15,7 +15,7 @@ function Separator({
       role={decorative ? "none" : "separator"}
       aria-orientation={!decorative ? orientation : undefined}
       className={cn(
-        "shrink-0 bg-border",
+        "shrink-0 bg-gray-200",
         orientation === "horizontal" ? "h-px w-full" : "w-px self-stretch",
         className
       )}

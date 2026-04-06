@@ -92,7 +92,7 @@ function DropdownMenuContent({
     <div
       role="menu"
       className={cn(
-        "absolute top-full z-50 mt-1 min-w-32 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 animate-in fade-in-0 zoom-in-95",
+        "absolute top-full z-50 mt-1 min-w-40 rounded-lg bg-white border border-gray-200 p-1 shadow-lg",
         alignClass,
         className
       )}
@@ -115,11 +115,7 @@ function DropdownMenuLabel({
 }: React.ComponentProps<"div"> & { inset?: boolean }) {
   return (
     <div
-      className={cn(
-        "px-1.5 py-1 text-xs font-medium text-muted-foreground",
-        inset && "pl-7",
-        className
-      )}
+      className={cn("px-2 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide", inset && "pl-7", className)}
       {...props}
     >
       {children}
@@ -157,10 +153,10 @@ function DropdownMenuItem({
         }
       }}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-1.5 rounded-md px-1.5 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 outline-none transition-colors hover:bg-gray-100 focus:bg-gray-100",
         inset && "pl-7",
-        variant === "destructive" && "text-destructive hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive",
-        "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+        variant === "destructive" && "text-red-600 hover:bg-red-50 focus:bg-red-50",
+        "[&_svg]:size-4 [&_svg]:shrink-0",
         className
       )}
       {...props}
@@ -188,7 +184,7 @@ function DropdownMenuCheckboxItem({
       aria-checked={checked}
       onClick={() => onCheckedChange?.(!checked)}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-sm text-gray-700 outline-none transition-colors hover:bg-gray-100",
         inset && "pl-7",
         className
       )}
@@ -216,7 +212,7 @@ function DropdownMenuRadioItem({
     <div
       role="menuitemradio"
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+        "relative flex cursor-pointer select-none items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-sm text-gray-700 outline-none transition-colors hover:bg-gray-100",
         inset && "pl-7",
         className
       )}
@@ -231,21 +227,12 @@ function DropdownMenuRadioItem({
 }
 
 function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      role="separator"
-      className={cn("-mx-1 my-1 h-px bg-border", className)}
-      {...props}
-    />
-  )
+  return <div role="separator" className={cn("-mx-1 my-1 h-px bg-gray-200", className)} {...props} />
 }
 
 function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return (
-    <span
-      className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)}
-      {...props}
-    />
+    <span className={cn("ml-auto text-xs tracking-widest text-gray-400", className)} {...props} />
   )
 }
 
@@ -262,9 +249,8 @@ function DropdownMenuSubTrigger({
   return (
     <div
       className={cn(
-        "flex cursor-pointer select-none items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+        "flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 outline-none transition-colors hover:bg-gray-100 [&_svg]:size-4 [&_svg]:shrink-0",
         inset && "pl-7",
-        "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
         className
       )}
       {...props}
@@ -279,7 +265,7 @@ function DropdownMenuSubContent({ className, ...props }: React.ComponentProps<"d
   return (
     <div
       className={cn(
-        "absolute left-full top-0 z-50 ml-1 min-w-24 rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10",
+        "absolute left-full top-0 z-50 ml-1 min-w-32 rounded-lg bg-white border border-gray-200 p-1 shadow-lg",
         className
       )}
       {...props}

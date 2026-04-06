@@ -8,7 +8,7 @@ function TooltipProvider({ children, delay: _delay = 0 }: { children: React.Reac
 }
 
 function Tooltip({ children }: { children: React.ReactNode }) {
-  return <div className="relative inline-flex">{children}</div>
+  return <div className="relative inline-flex group">{children}</div>
 }
 
 function TooltipTrigger({ children, ...props }: React.ComponentProps<"button">) {
@@ -35,7 +35,7 @@ function TooltipContent({
     <div
       role="tooltip"
       className={cn(
-        "absolute z-50 hidden w-max max-w-xs rounded-md bg-foreground px-2.5 py-1.5 text-xs text-background group-hover:block",
+        "absolute z-50 hidden w-max max-w-xs rounded-md bg-gray-900 px-2.5 py-1.5 text-xs text-white shadow-lg group-hover:block",
         posClass,
         className
       )}

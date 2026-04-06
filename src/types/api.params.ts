@@ -60,6 +60,7 @@ export type CheckInParams = {
   crates: CheckInCrateParams[];
   pricingType?: string;
   pricePerUnit?: number;
+  notes?: string;
 };
 
 export type CheckOutCrateParams = {
@@ -97,8 +98,11 @@ export type CreateLocationParams = {
   name: string;
   latitude: number;
   longitude: number;
-  address?: string;
-  companyId?: number;
+  state?: string;
+  city?: string;
+  street?: string;
+  streetNumber?: number;
+  zipCode?: string;
 };
 
 export type UpdateLocationParams = Partial<CreateLocationParams>;
@@ -201,11 +205,8 @@ export type CreateNotificationParams = {
 // ─── Farmer Survey ────────────────────────────────────────────────────────────
 
 export type CreateFarmerSurveyParams = {
-  farmer: number;
-  farmSize: number;
-  cropsGrown: string;
-  irrigationMethod: string;
-  annualProduction: number;
+  farmerId: number;
+  data: Record<string, unknown>;
 };
 
 // ─── Crops & Produce ──────────────────────────────────────────────────────────

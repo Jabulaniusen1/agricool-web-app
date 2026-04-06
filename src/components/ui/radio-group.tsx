@@ -56,8 +56,8 @@ function RadioGroupItem({
       disabled={disabled}
       onClick={() => ctx?.onValueChange(value)}
       className={cn(
-        "peer relative flex aspect-square size-4 shrink-0 rounded-full border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
-        isChecked ? "border-primary bg-primary" : "border-input bg-transparent",
+        "peer relative flex aspect-square size-4 shrink-0 rounded-full border-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50",
+        isChecked ? "border-gray-900 bg-gray-900" : "border-gray-300 bg-white",
         className
       )}
       {...props}

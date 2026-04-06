@@ -60,10 +60,7 @@ function AlertDialogPortal({ children }: { children: React.ReactNode }) {
 function AlertDialogOverlay({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn(
-        "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm animate-in fade-in-0",
-        className
-      )}
+      className={cn("fixed inset-0 z-50 bg-black/40 backdrop-blur-sm", className)}
       {...props}
     />
   )
@@ -78,12 +75,12 @@ function AlertDialogContent({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <AlertDialogOverlay />
       <div
         className={cn(
-          "relative z-50 grid w-full gap-4 rounded-xl bg-popover p-4 text-popover-foreground shadow-lg ring-1 ring-foreground/10 animate-in fade-in-0 zoom-in-95",
-          size === "default" ? "max-w-xs sm:max-w-sm" : "max-w-xs",
+          "relative z-50 w-full rounded-xl bg-white border border-gray-200 shadow-xl p-5",
+          size === "default" ? "max-w-sm" : "max-w-xs",
           className
         )}
         onClick={(e) => e.stopPropagation()}
@@ -95,20 +92,14 @@ function AlertDialogContent({
 
 function AlertDialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      className={cn("flex flex-col items-center gap-1.5 text-center sm:items-start sm:text-left", className)}
-      {...props}
-    />
+    <div className={cn("flex flex-col gap-1 mb-4", className)} {...props} />
   )
 }
 
 function AlertDialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
-        className
-      )}
+      className={cn("flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   )
@@ -117,22 +108,19 @@ function AlertDialogFooter({ className, ...props }: React.ComponentProps<"div">)
 function AlertDialogMedia({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn(
-        "mb-2 inline-flex size-10 items-center justify-center rounded-md bg-muted [&>svg]:size-6",
-        className
-      )}
+      className={cn("mb-3 inline-flex size-10 items-center justify-center rounded-lg bg-gray-100 [&>svg]:size-6", className)}
       {...props}
     />
   )
 }
 
 function AlertDialogTitle({ className, ...props }: React.ComponentProps<"h2">) {
-  return <h2 className={cn("text-base font-semibold", className)} {...props} />
+  return <h2 className={cn("text-base font-semibold text-gray-900", className)} {...props} />
 }
 
 function AlertDialogDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <p className={cn("text-sm text-muted-foreground", className)} {...props} />
+    <p className={cn("text-sm text-gray-500", className)} {...props} />
   )
 }
 
@@ -141,7 +129,7 @@ function AlertDialogAction({ className, ...props }: React.ComponentProps<"button
     <button
       type="button"
       className={cn(
-        "inline-flex h-8 items-center justify-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors",
+        "inline-flex h-9 items-center justify-center rounded-lg bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800 transition-colors",
         className
       )}
       {...props}
@@ -156,7 +144,7 @@ function AlertDialogCancel({ className, ...props }: React.ComponentProps<"button
       type="button"
       onClick={() => setOpen(false)}
       className={cn(
-        "inline-flex h-8 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted transition-colors",
+        "inline-flex h-9 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors",
         className
       )}
       {...props}

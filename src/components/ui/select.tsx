@@ -9,6 +9,8 @@ type SelectContextType = {
   onValueChange: (v: string) => void
   open: boolean
   setOpen: (v: boolean) => void
+  labelMap: Record<string, string>
+  registerLabel: (value: string, label: string) => void
 }
 
 const SelectContext = React.createContext<SelectContextType | null>(null)
@@ -28,6 +30,7 @@ function Select({
 }) {
   const [internal, setInternal] = React.useState(defaultValue)
   const [open, setOpen] = React.useState(false)
+  const [labelMap, setLabelMap] = React.useState<Record<string, string>>({})
   const actual = value !== undefined ? value : internal
 
   const handleChange = (v: string) => {
@@ -37,7 +40,10 @@ function Select({
     setOpen(false)
   }
 
-  // close on outside click
+  const registerLabel = React.useCallback((v: string, label: string) => {
+    setLabelMap((prev) => (prev[v] === label ? prev : { ...prev, [v]: label }))
+  }, [])
+
   const ref = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     if (!open) return
@@ -49,7 +55,7 @@ function Select({
   }, [open])
 
   return (
-    <SelectContext.Provider value={{ value: actual, onValueChange: handleChange, open: disabled ? false : open, setOpen: disabled ? () => {} : setOpen }}>
+    <SelectContext.Provider value={{ value: actual, onValueChange: handleChange, open: disabled ? false : open, setOpen: disabled ? () => {} : setOpen, labelMap, registerLabel }}>
       <div ref={ref} className={cn("relative", disabled && "opacity-50 pointer-events-none")}>
         {children}
       </div>
@@ -70,14 +76,14 @@ function SelectTrigger({
       onClick={() => ctx?.setOpen(!ctx.open)}
       aria-expanded={ctx?.open}
       className={cn(
-        "flex w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent px-2.5 text-sm whitespace-nowrap transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-muted-foreground",
-        size === "default" ? "h-8" : "h-7",
+        "flex w-full items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 transition-colors outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:opacity-50",
+        size === "default" ? "h-9" : "h-8",
         className
       )}
       {...props}
     >
       {children}
-      <ChevronDownIcon className="size-4 text-muted-foreground shrink-0" />
+      <ChevronDownIcon className="size-4 text-gray-400 shrink-0" />
     </button>
   )
 }
@@ -88,12 +94,13 @@ function SelectValue({
   ...props
 }: React.ComponentProps<"span"> & { placeholder?: string }) {
   const ctx = React.useContext(SelectContext)
+  const displayLabel = ctx?.value ? (ctx.labelMap[ctx.value] ?? ctx.value) : undefined
   return (
     <span
-      className={cn("flex-1 text-left truncate", !ctx?.value && "text-muted-foreground", className)}
+      className={cn("flex-1 text-left truncate", !ctx?.value && "text-gray-400", className)}
       {...props}
     >
-      {ctx?.value || placeholder}
+      {displayLabel ?? placeholder}
     </span>
   )
 }
@@ -108,7 +115,7 @@ function SelectContent({
   return (
     <div
       className={cn(
-        "absolute left-0 top-full z-50 mt-1 w-full min-w-36 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+        "absolute left-0 top-full z-50 mt-1 w-full min-w-36 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg",
         className
       )}
       {...props}
@@ -124,10 +131,7 @@ function SelectGroup({ className, ...props }: React.ComponentProps<"div">) {
 
 function SelectLabel({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      className={cn("px-2 py-1 text-xs text-muted-foreground", className)}
-      {...props}
-    />
+    <div className={cn("px-2 py-1 text-xs font-medium text-gray-400", className)} {...props} />
   )
 }
 
@@ -141,6 +145,11 @@ function SelectItem({
   const ctx = React.useContext(SelectContext)
   const isSelected = ctx?.value === value
 
+  const label = typeof children === "string" ? children : undefined
+  React.useEffect(() => {
+    if (label) ctx?.registerLabel(value, label)
+  }, [value, label])
+
   return (
     <div
       role="option"
@@ -148,9 +157,9 @@ function SelectItem({
       aria-disabled={disabled}
       onClick={() => !disabled && ctx?.onValueChange(value)}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-md py-1.5 pl-2 pr-8 text-sm outline-none transition-colors",
-        disabled ? "pointer-events-none opacity-50" : "hover:bg-accent hover:text-accent-foreground cursor-pointer",
-        isSelected && "bg-accent text-accent-foreground",
+        "relative flex w-full cursor-default select-none items-center rounded-md py-1.5 pl-3 pr-8 text-sm text-gray-900 outline-none transition-colors",
+        disabled ? "pointer-events-none opacity-50" : "hover:bg-gray-100 cursor-pointer",
+        isSelected && "bg-gray-100 font-medium",
         className
       )}
       {...props}
@@ -158,7 +167,7 @@ function SelectItem({
       <span className="flex-1 truncate">{children}</span>
       {isSelected && (
         <span className="absolute right-2 flex size-4 items-center justify-center">
-          <CheckIcon className="size-3.5" />
+          <CheckIcon className="size-3.5 text-gray-600" />
         </span>
       )}
     </div>
@@ -166,12 +175,7 @@ function SelectItem({
 }
 
 function SelectSeparator({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      className={cn("-mx-1 my-1 h-px bg-border", className)}
-      {...props}
-    />
-  )
+  return <div className={cn("-mx-1 my-1 h-px bg-gray-200", className)} {...props} />
 }
 
 function SelectScrollUpButton(_props: React.ComponentProps<"div">) { return null }

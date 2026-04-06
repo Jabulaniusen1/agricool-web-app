@@ -221,24 +221,28 @@ class MarketplaceService {
   }
 
   async addPaystackAccount(data: {
+    accountType: string;
     bankCode: string;
     accountNumber: string;
+    accountName: string;
   }): Promise<PaystackAccount> {
     const res = await httpClient.post<PaystackAccount>(
       "/marketplace/seller/paystack-accounts/",
-      data
+      { ...data, countryCode: "NG" }
     );
     return res.data;
   }
 
   async setupFarmerBankAccount(data: {
     farmerId: number;
+    accountType: string;
     bankCode: string;
     accountNumber: string;
+    accountName: string;
   }): Promise<void> {
     await httpClient.post(
       "/marketplace/company/setup/users-first-paystack-bank-account/",
-      data
+      { ...data, countryCode: "NG" }
     );
   }
 

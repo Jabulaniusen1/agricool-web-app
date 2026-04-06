@@ -31,15 +31,13 @@ function Checkbox({
         onCheckedChange?.(next)
       }}
       className={cn(
-        "peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
-        isChecked
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-input bg-transparent",
+        "peer relative flex size-4 shrink-0 items-center justify-center rounded border-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50",
+        isChecked ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 bg-white",
         className
       )}
       {...props}
     >
-      {isChecked && <CheckIcon className="size-3.5" />}
+      {isChecked && <CheckIcon className="size-3" />}
     </button>
   )
 }

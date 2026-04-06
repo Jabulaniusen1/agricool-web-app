@@ -17,7 +17,7 @@ function Progress({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={value ?? undefined}
-        className={cn("flex flex-wrap gap-3", className)}
+        className={cn("flex flex-wrap gap-2", className)}
         {...props}
       >
         {children}
@@ -32,10 +32,7 @@ function Progress({
 function ProgressTrack({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn(
-        "relative flex h-1 w-full items-center overflow-hidden rounded-full bg-muted",
-        className
-      )}
+      className={cn("relative flex h-2 w-full items-center overflow-hidden rounded-full bg-gray-200", className)}
       {...props}
     >
       {children}
@@ -47,7 +44,7 @@ function ProgressIndicator({ className, ...props }: React.ComponentProps<"div">)
   const { value } = React.useContext(ProgressContext)
   return (
     <div
-      className={cn("h-full bg-primary transition-all", className)}
+      className={cn("h-full bg-gray-900 transition-all", className)}
       style={{ width: `${value ?? 0}%` }}
       {...props}
     />
@@ -55,24 +52,13 @@ function ProgressIndicator({ className, ...props }: React.ComponentProps<"div">)
 }
 
 function ProgressLabel({ className, ...props }: React.ComponentProps<"span">) {
-  return (
-    <span className={cn("text-sm font-medium", className)} {...props} />
-  )
+  return <span className={cn("text-sm font-medium text-gray-700", className)} {...props} />
 }
 
 function ProgressValue({ className, ...props }: React.ComponentProps<"span">) {
   return (
-    <span
-      className={cn("ml-auto text-sm text-muted-foreground tabular-nums", className)}
-      {...props}
-    />
+    <span className={cn("ml-auto text-sm text-gray-500 tabular-nums", className)} {...props} />
   )
 }
 
-export {
-  Progress,
-  ProgressTrack,
-  ProgressIndicator,
-  ProgressLabel,
-  ProgressValue,
-}
+export { Progress, ProgressTrack, ProgressIndicator, ProgressLabel, ProgressValue }

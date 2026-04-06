@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import { Plus, Edit, Trash2, MapPin } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, LocateFixed } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,9 +39,18 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { useLocations } from "@/hooks/use-locations";
+import { useMapboxLocation } from "@/hooks/use-mapbox-location";
 import { coldtivateService } from "@/services/coldtivate-service";
 import { locationSchema, LocationFormValues } from "@/constants/schemas";
 import { Location } from "@/types/global";
+
+// ─── WKT helper ────────────────────────────────────────────────────────────────
+
+function parsePoint(point: string): { lat: number; lng: number } | null {
+  const match = point.match(/POINT\(([^ ]+)\s+([^ )]+)\)/i);
+  if (!match) return null;
+  return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+}
 
 // ─── Table Skeleton ────────────────────────────────────────────────────────────
 
@@ -57,7 +66,6 @@ function TableSkeleton() {
             <div key={i} className="flex items-center gap-4 px-4 py-3">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-8 w-16 ml-auto" />
             </div>
@@ -82,22 +90,30 @@ function LocationFormDialog({
   onSaved: () => void;
 }) {
   const [saving, setSaving] = useState(false);
+  const { getLocation, loading: locating, error: locationError } = useMapboxLocation();
+
+  const editCoords = editLocation ? parsePoint(editLocation.point) : null;
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<LocationFormValues>({
     resolver: zodResolver(locationSchema),
     defaultValues: editLocation
       ? {
           name: editLocation.name,
-          address: editLocation.address ?? "",
-          latitude: editLocation.latitude,
-          longitude: editLocation.longitude,
+          latitude: editCoords?.lat ?? 0,
+          longitude: editCoords?.lng ?? 0,
+          state: editLocation.state ?? "",
+          city: editLocation.city ?? "",
+          street: editLocation.street ?? "",
+          streetNumber: editLocation.streetNumber,
+          zipCode: editLocation.zipCode ?? "",
         }
-      : { name: "", address: "", latitude: 0, longitude: 0 },
+      : { name: "", latitude: 0, longitude: 0, state: "", city: "", street: "", zipCode: "" },
   });
 
   async function onSubmit(values: LocationFormValues) {
@@ -125,6 +141,17 @@ function LocationFormDialog({
     onClose();
   }
 
+  async function handleUseMyLocation() {
+    const result = await getLocation();
+    if (!result) return;
+    setValue("latitude", result.latitude);
+    setValue("longitude", result.longitude);
+    if (result.city) setValue("city", result.city);
+    if (result.state) setValue("state", result.state);
+    if (result.street) setValue("street", result.street);
+    if (result.zipCode) setValue("zipCode", result.zipCode);
+  }
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="max-w-md">
@@ -134,48 +161,87 @@ function LocationFormDialog({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div className="space-y-1">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Name *</Label>
             <Input id="name" placeholder="e.g. Kano Warehouse" {...register("name")} />
-            {errors.name && (
-              <p className="text-xs text-red-500">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="address">Address</Label>
-            <Input id="address" placeholder="e.g. 12 Market Road, Kano" {...register("address")} />
-            {errors.address && (
-              <p className="text-xs text-red-500">{errors.address.message}</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Coordinates</span>
+              <button
+                type="button"
+                onClick={handleUseMyLocation}
+                disabled={locating}
+                className="flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 font-medium disabled:opacity-50"
+              >
+                <LocateFixed size={12} />
+                {locating ? "Detecting..." : "Use my location"}
+              </button>
+            </div>
+            {locationError && (
+              <p className="text-xs text-red-500">{locationError}</p>
             )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="latitude">Latitude *</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  placeholder="e.g. 12.0022"
+                  {...register("latitude", { valueAsNumber: true })}
+                />
+                {errors.latitude && (
+                  <p className="text-xs text-red-500">{errors.latitude.message}</p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="longitude">Longitude *</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  placeholder="e.g. 8.5920"
+                  {...register("longitude", { valueAsNumber: true })}
+                />
+                {errors.longitude && (
+                  <p className="text-xs text-red-500">{errors.longitude.message}</p>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="latitude">Latitude</Label>
-              <Input
-                id="latitude"
-                type="number"
-                step="any"
-                placeholder="e.g. 12.0022"
-                {...register("latitude", { valueAsNumber: true })}
-              />
-              {errors.latitude && (
-                <p className="text-xs text-red-500">{errors.latitude.message}</p>
-              )}
+              <Label htmlFor="city">City</Label>
+              <Input id="city" placeholder="e.g. Kano" {...register("city")} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="longitude">Longitude</Label>
-              <Input
-                id="longitude"
-                type="number"
-                step="any"
-                placeholder="e.g. 8.5920"
-                {...register("longitude", { valueAsNumber: true })}
-              />
-              {errors.longitude && (
-                <p className="text-xs text-red-500">{errors.longitude.message}</p>
-              )}
+              <Label htmlFor="state">State</Label>
+              <Input id="state" placeholder="e.g. Kano State" {...register("state")} />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="street">Street</Label>
+              <Input id="street" placeholder="e.g. Market Road" {...register("street")} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="streetNumber">Street No.</Label>
+              <Input
+                id="streetNumber"
+                type="number"
+                placeholder="e.g. 12"
+                {...register("streetNumber", { valueAsNumber: true })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="zipCode">Zip / Postal Code</Label>
+            <Input id="zipCode" placeholder="e.g. 700001" {...register("zipCode")} />
           </div>
 
           <DialogFooter className="pt-2">
@@ -284,9 +350,9 @@ export default function LocationsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead className="text-right">Latitude</TableHead>
-                    <TableHead className="text-right">Longitude</TableHead>
+                    <TableHead>City</TableHead>
+                    <TableHead>State</TableHead>
+                    <TableHead>Street</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -295,13 +361,15 @@ export default function LocationsPage() {
                     <TableRow key={loc.id}>
                       <TableCell className="font-medium text-sm">{loc.name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {loc.address ?? "—"}
+                        {loc.city || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {loc.latitude.toFixed(6)}
+                      <TableCell className="text-sm text-muted-foreground">
+                        {loc.state || "—"}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {loc.longitude.toFixed(6)}
+                      <TableCell className="text-sm text-muted-foreground">
+                        {loc.street
+                          ? `${loc.street}${loc.streetNumber ? ` ${loc.streetNumber}` : ""}`
+                          : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">

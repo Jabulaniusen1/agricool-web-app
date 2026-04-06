@@ -99,9 +99,13 @@ export const coolingUnitSchema = z.object({
 
 export const locationSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180),
-  address: z.string().optional(),
+  latitude: z.number().min(-90).max(90, "Invalid latitude"),
+  longitude: z.number().min(-180).max(180, "Invalid longitude"),
+  state: z.string().optional(),
+  city: z.string().optional(),
+  street: z.string().optional(),
+  streetNumber: z.number().int().positive().optional(),
+  zipCode: z.string().optional(),
 });
 
 // ─── Marketplace ──────────────────────────────────────────────────────────────
@@ -131,8 +135,10 @@ export const profileSchema = z.object({
 });
 
 export const bankAccountSchema = z.object({
+  accountType: z.enum(["1", "2"]),
   bankCode: z.string().min(1, "Bank is required"),
   accountNumber: z.string().length(10, "Account number must be 10 digits"),
+  accountName: z.string().min(1, "Account name is required"),
 });
 
 // ─── Market Survey ────────────────────────────────────────────────────────────

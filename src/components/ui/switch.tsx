@@ -32,9 +32,9 @@ function Switch({
         onCheckedChange?.(next)
       }}
       className={cn(
-        "peer relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+        "peer relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50",
         size === "default" ? "h-5 w-9" : "h-3.5 w-6",
-        isChecked ? "bg-primary" : "bg-input",
+        isChecked ? "bg-gray-900" : "bg-gray-300",
         className
       )}
       {...props}

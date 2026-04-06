@@ -25,8 +25,6 @@ import {
   MarketSurvey,
   Notification,
   PredictionGraphData,
-  PredictionTableData,
-  PredictionParams,
   PredictionState,
   PredictionMarket,
   ConnectionTestResult,
@@ -34,6 +32,7 @@ import {
   EcozanSensor,
   PaginatedResponse,
   CoolingUnitCrop,
+  FarmerBankAccount,
 } from "@/types/global";
 import {
   CheckInParams,
@@ -56,7 +55,6 @@ import {
   LinkSensorToUserParams,
   CreateEcozenSensorParams,
   CreateMarketSurveyParams,
-  PredictionQueryParams,
 } from "@/types/api.params";
 
 class ColdtivateService {
@@ -233,12 +231,19 @@ class ColdtivateService {
   }
 
   async createLocation(data: CreateLocationParams): Promise<Location> {
-    const res = await httpClient.post<Location>("/storage/v1/locations/", data);
+    const { latitude, longitude, ...rest } = data;
+    const body = { ...rest, point: `SRID=4326;POINT(${longitude} ${latitude})` };
+    const res = await httpClient.post<Location>("/storage/v1/locations/", body);
     return res.data;
   }
 
   async updateLocation(locationId: number, data: UpdateLocationParams): Promise<Location> {
-    const res = await httpClient.put<Location>(`/storage/v1/locations/${locationId}/`, data);
+    const { latitude, longitude, ...rest } = data;
+    const body =
+      latitude !== undefined && longitude !== undefined
+        ? { ...rest, point: `SRID=4326;POINT(${longitude} ${latitude})` }
+        : rest;
+    const res = await httpClient.put<Location>(`/storage/v1/locations/${locationId}/`, body);
     return res.data;
   }
 
@@ -433,6 +438,32 @@ class ColdtivateService {
     return res.data;
   }
 
+  // ─── Usage & Revenue Analysis ─────────────────────────────────────────────────
+
+  async getUsageAnalysis(params: { coolingUnits: number | number[] }): Promise<PaginatedResponse<Movement>> {
+    const coolingUnits = Array.isArray(params.coolingUnits)
+      ? params.coolingUnits.join(",")
+      : params.coolingUnits;
+    const res = await httpClient.get<PaginatedResponse<Movement>>("/operation/movements/usage/", {
+      params: { coolingUnits },
+    });
+    return res.data;
+  }
+
+  async getRevenueAnalysis(params: {
+    coolingUnits: number | number[];
+    paymentMethods?: string[];
+  }): Promise<PaginatedResponse<Movement>> {
+    const coolingUnits = Array.isArray(params.coolingUnits)
+      ? params.coolingUnits.join(",")
+      : params.coolingUnits;
+    const paymentMethods = (params.paymentMethods ?? []).join(",");
+    const res = await httpClient.get<PaginatedResponse<Movement>>("/operation/movements/revenue/", {
+      params: { coolingUnits, ...(paymentMethods && { paymentMethods }) },
+    });
+    return res.data;
+  }
+
   // ─── Market Survey ────────────────────────────────────────────────────────────
 
   async createMarketSurvey(data: CreateMarketSurveyParams): Promise<MarketSurvey> {
@@ -476,15 +507,7 @@ class ColdtivateService {
     return res.data;
   }
 
-  async getPredictionGraphIndia(data: PredictionQueryParams): Promise<PredictionGraphData> {
-    const res = await httpClient.post<PredictionGraphData>(
-      "/prediction/predictions/get_data_graph",
-      data
-    );
-    return res.data;
-  }
-
-  async getPredictionGraphNigeria(data: PredictionQueryParams): Promise<PredictionGraphData> {
+  async getPredictionGraphNigeria(data: { marketId: number; cropId: number }): Promise<PredictionGraphData> {
     const res = await httpClient.post<PredictionGraphData>(
       "/prediction/predictions/get_data_graph_ng",
       data
@@ -492,32 +515,10 @@ class ColdtivateService {
     return res.data;
   }
 
-  async getPredictionTableIndia(data: PredictionQueryParams): Promise<PredictionTableData> {
-    const res = await httpClient.post<PredictionTableData>(
-      "/prediction/predictions/get_data_table",
+  async getPredictionGraphIndia(data: { marketId: number; cropId: number }): Promise<PredictionGraphData> {
+    const res = await httpClient.post<PredictionGraphData>(
+      "/prediction/predictions/get_data_graph",
       data
-    );
-    return res.data;
-  }
-
-  async getPredictionTableNigeria(data: PredictionQueryParams): Promise<PredictionTableData> {
-    const res = await httpClient.post<PredictionTableData>(
-      "/prediction/predictions/get_data_table_ng",
-      data
-    );
-    return res.data;
-  }
-
-  async getPredictionParamsIndia(): Promise<PredictionParams> {
-    const res = await httpClient.get<PredictionParams>(
-      "/prediction/states/get_parameters_for_prediction/"
-    );
-    return res.data;
-  }
-
-  async getPredictionParamsNigeria(): Promise<PredictionParams> {
-    const res = await httpClient.get<PredictionParams>(
-      "/prediction/statesng/get_parameters_for_prediction/"
     );
     return res.data;
   }

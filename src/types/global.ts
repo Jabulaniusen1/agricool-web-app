@@ -169,9 +169,12 @@ export type CoolingUnit = {
 export type Location = {
   id: number;
   name: string;
-  address?: string;
-  latitude: number;
-  longitude: number;
+  state: string;
+  city: string;
+  street: string;
+  streetNumber?: number;
+  zipCode: string;
+  point: string; // WKT: "SRID=4326;POINT(longitude latitude)"
   company?: number;
 };
 
@@ -430,7 +433,7 @@ export type PaystackAccount = {
   isDefault: boolean;
 };
 
-export type FarmerBankAccount = PaystackAccount & { farmerId: number };
+// FarmerBankAccount defined below near line 636
 
 export type Coupon = {
   id: number;
@@ -506,16 +509,16 @@ export type ImpactMetrics = {
 // ─── Predictions ──────────────────────────────────────────────────────────────
 
 export type PredictionGraphData = {
-  crop: string;
-  state: string;
-  series: { date: string; price: number; predicted?: boolean }[];
+  pastValues: { date: string; price: number | null }[];
+  forecastValues: { date: string; price: number | null; interpolated?: boolean }[];
 };
 
-export type PredictionTableData = {
-  crop: string;
-  state: string;
-  rows: { date: string; price: number; predicted: boolean }[];
-};
+export type PredictionTableData = Array<{
+  state?: string;
+  market?: string;
+  date: string;
+  price: number | null;
+}>;
 
 export type PredictionParams = {
   crops: string[];
@@ -601,6 +604,44 @@ export type MarketplaceData = {
   coolingUnits: unknown[];
   markets: unknown[];
   bankCodes: unknown[];
+};
+
+// ─── Usage & Revenue Analysis ─────────────────────────────────────────────────
+
+export type UsageAnalysisEntry = {
+  id: number;
+  coolingUnit: number;
+  coolingUnitName: string;
+  checkInDate: string;
+  checkOutDate?: string;
+  cropName: string;
+  farmerName: string;
+  totalWeight: number;
+  movementType: "IN" | "OUT";
+};
+
+export type RevenueAnalysisEntry = {
+  id: number;
+  coolingUnit: number;
+  coolingUnitName: string;
+  date: string;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  farmerName: string;
+};
+
+// ─── FarmerBankAccount ────────────────────────────────────────────────────────
+
+export type FarmerBankAccount = {
+  id: number;
+  farmer: number;
+  bankCode: string;
+  bankName?: string;
+  accountNumber: string;
+  accountName?: string;
+  countryCode: string;
+  isDefault: boolean;
 };
 
 // ─── Pagination ───────────────────────────────────────────────────────────────

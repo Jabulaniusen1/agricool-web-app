@@ -76,10 +76,7 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<"div">) {
   const { setOpen } = React.useContext(DialogContext)
   return (
     <div
-      className={cn(
-        "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm animate-in fade-in-0",
-        className
-      )}
+      className={cn("fixed inset-0 z-50 bg-black/40 backdrop-blur-sm", className)}
       onClick={() => setOpen(false)}
       {...props}
     />
@@ -103,11 +100,11 @@ function DialogContent({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <DialogOverlay />
       <div
         className={cn(
-          "relative z-50 grid w-full max-w-[calc(100%-2rem)] sm:max-w-sm gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground shadow-lg ring-1 ring-foreground/10 animate-in fade-in-0 zoom-in-95",
+          "relative z-50 w-full max-w-md rounded-xl bg-white border border-gray-200 shadow-xl p-5",
           className
         )}
         onClick={(e) => e.stopPropagation()}
@@ -118,7 +115,7 @@ function DialogContent({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="absolute top-2 right-2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="absolute top-3 right-3 rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
           >
             <XIcon className="size-4" />
             <span className="sr-only">Close</span>
@@ -130,17 +127,14 @@ function DialogContent({
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("flex flex-col gap-2", className)} {...props} />
+  return <div className={cn("flex flex-col gap-1 mb-4", className)} {...props} />
 }
 
 function DialogFooter({ className, showCloseButton = false, children, ...props }: React.ComponentProps<"div"> & { showCloseButton?: boolean }) {
   const { setOpen } = React.useContext(DialogContext)
   return (
     <div
-      className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
-        className
-      )}
+      className={cn("flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end", className)}
       {...props}
     >
       {children}
@@ -148,7 +142,7 @@ function DialogFooter({ className, showCloseButton = false, children, ...props }
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium hover:bg-muted transition-colors"
+          className="inline-flex h-9 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
           Close
         </button>
@@ -159,19 +153,13 @@ function DialogFooter({ className, showCloseButton = false, children, ...props }
 
 function DialogTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
-    <h2
-      className={cn("text-base font-semibold leading-none", className)}
-      {...props}
-    />
+    <h2 className={cn("text-base font-semibold text-gray-900 leading-none", className)} {...props} />
   )
 }
 
 function DialogDescription({ className, ...props }: React.ComponentProps<"p">) {
   return (
-    <p
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    />
+    <p className={cn("text-sm text-gray-500", className)} {...props} />
   )
 }
 

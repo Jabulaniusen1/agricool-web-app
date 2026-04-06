@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Thermometer } from "lucide-react";
+import { Plus, Edit, Trash2, Thermometer, MapPin, X, LocateFixed } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -45,8 +45,9 @@ import {
 
 import { useCoolingUnits } from "@/hooks/use-cooling-units";
 import { useLocations } from "@/hooks/use-locations";
+import { useMapboxLocation } from "@/hooks/use-mapbox-location";
 import { coldtivateService } from "@/services/coldtivate-service";
-import { coolingUnitSchema, CoolingUnitFormValues } from "@/constants/schemas";
+import { coolingUnitSchema, locationSchema, CoolingUnitFormValues, LocationFormValues } from "@/constants/schemas";
 import {
   CoolingUnit,
   ECoolingUnitType,
@@ -68,8 +69,27 @@ function CoolingUnitFormDialog({
   editUnit: CoolingUnit | null;
   onSaved: () => void;
 }) {
-  const { data: locations } = useLocations();
+  const { data: locations, mutate: mutateLocations } = useLocations();
   const [saving, setSaving] = useState(false);
+  const [showNewLocation, setShowNewLocation] = useState(false);
+  const [creatingLocation, setCreatingLocation] = useState(false);
+  const { getLocation, loading: locating, error: locationError } = useMapboxLocation();
+
+  async function handleUseMyLocation() {
+    const result = await getLocation();
+    if (!result) return;
+    locationForm.setValue("latitude", result.latitude);
+    locationForm.setValue("longitude", result.longitude);
+    if (result.city) locationForm.setValue("city", result.city);
+    if (result.state) locationForm.setValue("state", result.state);
+    if (result.street) locationForm.setValue("street", result.street);
+    if (result.zipCode) locationForm.setValue("zipCode", result.zipCode);
+  }
+
+  const locationForm = useForm<LocationFormValues>({
+    resolver: zodResolver(locationSchema),
+    defaultValues: { name: "", latitude: 0, longitude: 0, state: "", city: "", street: "", zipCode: "" },
+  });
 
   const {
     register,
@@ -126,8 +146,29 @@ function CoolingUnitFormDialog({
     }
   }
 
+  async function handleCreateLocation(
+    locValues: LocationFormValues,
+    setLocationId: (id: number) => void
+  ) {
+    setCreatingLocation(true);
+    try {
+      const created = await coldtivateService.createLocation(locValues);
+      await mutateLocations();
+      setLocationId(created.id);
+      setShowNewLocation(false);
+      locationForm.reset();
+      toast.success(`Location "${created.name}" created`);
+    } catch {
+      toast.error("Failed to create location");
+    } finally {
+      setCreatingLocation(false);
+    }
+  }
+
   function handleClose() {
     reset();
+    setShowNewLocation(false);
+    locationForm.reset();
     onClose();
   }
 
@@ -174,30 +215,149 @@ function CoolingUnitFormDialog({
 
           {/* Location */}
           <div>
-            <label className="text-sm font-medium mb-1 block">Location</label>
-            <Controller
-              control={control}
-              name="locationId"
-              render={({ field }) => (
-                <Select
-                  value={field.value ? field.value.toString() : ""}
-                  onValueChange={(v) => { if (v) field.onChange(Number(v)); }}
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-medium">Location</label>
+              {!showNewLocation && (
+                <button
+                  type="button"
+                  onClick={() => setShowNewLocation(true)}
+                  className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations?.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id.toString()}>
-                        {loc.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Plus size={12} />
+                  New location
+                </button>
               )}
-            />
-            {errors.locationId && (
-              <p className="text-xs text-red-500 mt-1">{errors.locationId.message}</p>
+            </div>
+
+            {!showNewLocation ? (
+              <>
+                <Controller
+                  control={control}
+                  name="locationId"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ? field.value.toString() : ""}
+                      onValueChange={(v) => { if (v) field.onChange(Number(v)); }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={locations?.length ? "Select location" : "No locations yet — create one"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations?.map((loc) => (
+                          <SelectItem key={loc.id} value={loc.id.toString()}>
+                            {loc.name}{loc.city ? ` · ${loc.city}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.locationId && (
+                  <p className="text-xs text-red-500 mt-1">{errors.locationId.message}</p>
+                )}
+              </>
+            ) : (
+              <Controller
+                control={control}
+                name="locationId"
+                render={({ field }) => (
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-green-700 flex items-center gap-1.5">
+                        <MapPin size={12} />
+                        Create new location
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => { setShowNewLocation(false); locationForm.reset(); }}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Location name *"
+                        {...locationForm.register("name")}
+                        className="bg-white text-sm"
+                      />
+                      {locationForm.formState.errors.name && (
+                        <p className="text-xs text-red-500">{locationForm.formState.errors.name.message}</p>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="City"
+                          {...locationForm.register("city")}
+                          className="bg-white text-sm"
+                        />
+                        <Input
+                          placeholder="State"
+                          {...locationForm.register("state")}
+                          className="bg-white text-sm"
+                        />
+                      </div>
+                      <Input
+                        placeholder="Street address"
+                        {...locationForm.register("street")}
+                        className="bg-white text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleUseMyLocation}
+                        disabled={locating}
+                        className="flex items-center gap-1.5 text-xs text-green-700 hover:text-green-800 font-medium disabled:opacity-50"
+                      >
+                        <LocateFixed size={12} />
+                        {locating ? "Detecting location..." : "Use my current location"}
+                      </button>
+                      {locationError && (
+                        <p className="text-xs text-red-500">{locationError}</p>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="Latitude *"
+                            {...locationForm.register("latitude", { valueAsNumber: true })}
+                            className="bg-white text-sm"
+                          />
+                          {locationForm.formState.errors.latitude && (
+                            <p className="text-xs text-red-500">{locationForm.formState.errors.latitude.message}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="Longitude *"
+                            {...locationForm.register("longitude", { valueAsNumber: true })}
+                            className="bg-white text-sm"
+                          />
+                          {locationForm.formState.errors.longitude && (
+                            <p className="text-xs text-red-500">{locationForm.formState.errors.longitude.message}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-xs"
+                      disabled={creatingLocation}
+                      onClick={locationForm.handleSubmit((vals) =>
+                        handleCreateLocation(vals, field.onChange)
+                      )}
+                    >
+                      {creatingLocation ? "Creating..." : "Create & select this location"}
+                    </Button>
+                  </div>
+                )}
+              />
             )}
           </div>
 

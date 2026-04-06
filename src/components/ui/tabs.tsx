@@ -55,12 +55,12 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "inline-flex items-center justify-center rounded-lg p-[3px] text-muted-foreground",
+  "inline-flex items-center justify-start rounded-lg p-1 text-gray-500",
   {
     variants: {
       variant: {
-        default: "bg-muted h-8",
-        line: "gap-1 bg-transparent",
+        default: "bg-gray-100 h-9",
+        line: "gap-1 bg-transparent border-b border-gray-200 rounded-none p-0 w-full",
       },
     },
     defaultVariants: {
@@ -101,10 +101,10 @@ function TabsTrigger({
       disabled={disabled}
       onClick={() => ctx.onValueChange(value)}
       className={cn(
-        "relative inline-flex h-[calc(100%-2px)] flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-0.5 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50",
         isActive
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
+          ? "bg-white text-gray-900 shadow-sm"
+          : "text-gray-500 hover:text-gray-700",
         className
       )}
       {...props}
@@ -124,11 +124,7 @@ function TabsContent({
   if (ctx.value !== value) return null
 
   return (
-    <div
-      role="tabpanel"
-      className={cn("flex-1 text-sm outline-none", className)}
-      {...props}
-    >
+    <div role="tabpanel" className={cn("flex-1 text-sm outline-none", className)} {...props}>
       {children}
     </div>
   )

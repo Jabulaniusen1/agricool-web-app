@@ -71,10 +71,7 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<"div">) {
   const { setOpen } = React.useContext(SheetContext)
   return (
     <div
-      className={cn(
-        "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity",
-        className
-      )}
+      className={cn("fixed inset-0 z-50 bg-black/40 backdrop-blur-sm", className)}
       onClick={() => setOpen(false)}
       {...props}
     />
@@ -82,10 +79,10 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const sideClasses = {
-  top: "inset-x-0 top-0 h-auto border-b rounded-b-xl",
-  bottom: "inset-x-0 bottom-0 h-auto border-t rounded-t-xl",
-  left: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
-  right: "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
+  top: "inset-x-0 top-0 h-auto border-b border-gray-200 rounded-b-xl",
+  bottom: "inset-x-0 bottom-0 h-auto border-t border-gray-200 rounded-t-xl",
+  left: "inset-y-0 left-0 h-full w-3/4 border-r border-gray-200 sm:max-w-sm",
+  right: "inset-y-0 right-0 h-full w-3/4 border-l border-gray-200 sm:max-w-sm",
 }
 
 function SheetContent({
@@ -113,7 +110,7 @@ function SheetContent({
       <SheetOverlay />
       <div
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-popover text-sm text-popover-foreground shadow-lg transition",
+          "fixed z-50 flex flex-col gap-4 bg-white text-sm text-gray-900 shadow-xl",
           sideClasses[side],
           className
         )}
@@ -125,7 +122,7 @@ function SheetContent({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="absolute top-3 right-3 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="absolute top-3 right-3 rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
           >
             <XIcon className="size-4" />
             <span className="sr-only">Close</span>
@@ -137,21 +134,19 @@ function SheetContent({
 }
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("flex flex-col gap-0.5 p-4", className)} {...props} />
+  return <div className={cn("flex flex-col gap-0.5 p-4 border-b border-gray-100", className)} {...props} />
 }
 
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("mt-auto flex flex-col gap-2 p-4", className)} {...props} />
+  return <div className={cn("mt-auto flex flex-col gap-2 p-4 border-t border-gray-100", className)} {...props} />
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<"h2">) {
-  return (
-    <h2 className={cn("text-base font-semibold text-foreground", className)} {...props} />
-  )
+  return <h2 className={cn("text-base font-semibold text-gray-900", className)} {...props} />
 }
 
 function SheetDescription({ className, ...props }: React.ComponentProps<"p">) {
-  return <p className={cn("text-sm text-muted-foreground", className)} {...props} />
+  return <p className={cn("text-sm text-gray-500", className)} {...props} />
 }
 
 export {

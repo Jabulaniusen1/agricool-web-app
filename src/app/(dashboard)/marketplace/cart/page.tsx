@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ShoppingCart, Trash2, ArrowLeft, Tag } from "lucide-react";
+import { ShoppingCart, Trash2, ArrowLeft, Tag, Minus, Plus } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,16 +29,20 @@ import { ROUTES } from "@/constants/routes";
 function CartItemRow({
   item,
   onRemove,
+  onUpdateQty,
   removing,
+  updating,
 }: {
   item: CartItem;
-  onRemove: (crateId: number) => void;
+  onRemove: (itemId: number) => void;
+  onUpdateQty: (itemId: number, qty: number) => void;
   removing: boolean;
+  updating: boolean;
 }) {
   return (
     <div className="flex items-center gap-4 py-4">
       {/* Crop image */}
-      <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center overflow-hidden shrink-0">
+      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center overflow-hidden shrink-0">
         {item.crate.cropImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -54,16 +58,39 @@ function CartItemRow({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{item.crate.name}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-500">
           {item.crate.weight.toFixed(1)} kg ·{" "}
           {item.crate.pricing[0]
-            ? `${formatCurrency(item.crate.pricing[0].pricePerUnit, item.crate.pricing[0].currency ?? "USD")}/unit`
+            ? `${formatCurrency(item.crate.pricing[0].pricePerUnit, item.crate.pricing[0].currency ?? "NGN")}/unit`
             : "—"}
         </p>
       </div>
 
+      {/* Quantity controls */}
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => onUpdateQty(item.id, Math.max(1, item.quantity - 1))}
+          disabled={removing || updating || item.quantity <= 1}
+        >
+          <Minus size={12} />
+        </Button>
+        <span className="w-8 text-center text-sm tabular-nums">{item.quantity}</span>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => onUpdateQty(item.id, item.quantity + 1)}
+          disabled={removing || updating}
+        >
+          <Plus size={12} />
+        </Button>
+      </div>
+
       {/* Total */}
-      <p className="font-semibold text-sm shrink-0">
+      <p className="font-semibold text-sm shrink-0 w-20 text-right">
         {formatCurrency(item.amount, "NGN")}
       </p>
 
@@ -72,7 +99,7 @@ function CartItemRow({
         variant="ghost"
         size="icon"
         className="text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
-        onClick={() => onRemove(item.crate.id)}
+        onClick={() => onRemove(item.id)}
         disabled={removing}
       >
         <Trash2 size={16} />
@@ -125,6 +152,7 @@ export default function CartPage() {
   const { data: cartData, isLoading, mutate } = useCart();
   const { cart, setCart } = useShoppingCartStore();
   const [removingId, setRemovingId] = useState<number | null>(null);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -132,16 +160,28 @@ export default function CartPage() {
 
   const displayCart = cartData ?? cart;
 
-  async function handleRemoveItem(crateId: number) {
-    setRemovingId(crateId);
+  async function handleRemoveItem(itemId: number) {
+    setRemovingId(itemId);
     try {
-      await marketplaceService.removeCartItem(crateId);
+      await marketplaceService.removeCartItem(itemId);
       await mutate();
       toast.success("Item removed from cart");
     } catch {
       toast.error("Failed to remove item");
     } finally {
       setRemovingId(null);
+    }
+  }
+
+  async function handleUpdateQty(itemId: number, quantity: number) {
+    setUpdatingId(itemId);
+    try {
+      await marketplaceService.updateCartItem(itemId, { quantity });
+      await mutate();
+    } catch {
+      toast.error("Failed to update quantity");
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -261,7 +301,9 @@ export default function CartPage() {
                   key={item.id}
                   item={item}
                   onRemove={handleRemoveItem}
-                  removing={removingId === item.crate.id}
+                  onUpdateQty={handleUpdateQty}
+                  removing={removingId === item.id}
+                  updating={updatingId === item.id}
                 />
               ))}
             </CardContent>

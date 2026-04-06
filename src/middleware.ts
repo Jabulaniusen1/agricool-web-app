@@ -11,6 +11,38 @@ const PUBLIC_PATHS = [
 
 const AUTH_ONLY_PATHS = ["/sign-in", "/sign-up", "/password-recovery", "/password-reset", "/invite"];
 
+// Routes restricted to SERVICE_PROVIDER + OPERATOR
+const MANAGER_ROUTES = [
+  "/management",
+  "/marketplace/cart",
+  "/marketplace/orders",
+  "/marketplace/company-orders",
+  "/account/farmer-bank-accounts",
+  "/account/marketplace-setup",
+  "/account/coupons",
+];
+
+// Routes restricted to SERVICE_PROVIDER only
+const SERVICE_PROVIDER_ROUTES = [
+  "/management/locations",
+  "/management/cooling-units",
+  "/management/company",
+  "/management/sensors",
+  "/account/farmer-bank-accounts",
+];
+
+function parseAuthCookie(cookie: string | undefined): { isAuthenticated: boolean; role: string | null } {
+  if (!cookie) return { isAuthenticated: false, role: null };
+  try {
+    const parsed = JSON.parse(cookie);
+    const isAuthenticated = !!(parsed?.state?.tokens?.access);
+    const role = parsed?.state?.user?.role ?? null;
+    return { isAuthenticated, role };
+  } catch {
+    return { isAuthenticated: false, role: null };
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -23,20 +55,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check auth token from cookie (set via JS - fallback to header)
-  // Since auth is stored in localStorage via Zustand, we use a custom cookie
-  // The app sets this cookie via JS when the user logs in
   const authCookie = request.cookies.get("agricool-auth");
-  let isAuthenticated = false;
-
-  if (authCookie) {
-    try {
-      const parsed = JSON.parse(authCookie.value);
-      isAuthenticated = !!(parsed?.state?.tokens?.access);
-    } catch {
-      isAuthenticated = false;
-    }
-  }
+  const { isAuthenticated, role } = parseAuthCookie(authCookie?.value);
 
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const isAuthOnlyPath = AUTH_ONLY_PATHS.some((p) => pathname.startsWith(p));
@@ -53,11 +73,30 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect root to dashboard or sign-in
+  // Redirect root
   if (pathname === "/") {
     return NextResponse.redirect(
       new URL(isAuthenticated ? "/dashboard" : "/sign-in", request.url)
     );
+  }
+
+  // Role-based route guards (only when authenticated)
+  if (isAuthenticated && role) {
+    const isServiceProvider = role === "SERVICE_PROVIDER";
+    const isOperator = role === "OPERATOR";
+    const isManager = isServiceProvider || isOperator;
+
+    // SERVICE_PROVIDER only routes
+    const isSpRoute = SERVICE_PROVIDER_ROUTES.some((r) => pathname.startsWith(r));
+    if (isSpRoute && !isServiceProvider) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    // Manager-only routes (not already caught above)
+    const isManagerRoute = MANAGER_ROUTES.some((r) => pathname.startsWith(r));
+    if (isManagerRoute && !isManager) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
 
   return NextResponse.next();

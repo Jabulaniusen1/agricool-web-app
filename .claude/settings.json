@@ -25,7 +25,10 @@
       "Bash(npm run:*)",
       "Bash(find \"/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/\\(auth\\)\" -name \"*.tsx\")",
       "Bash(find '/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/constants' -name *.ts)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "Bash(find \"/Users/mac/Desktop/Client projects/agricool/mobile-app-react-native copy/src\" -type f -name \"*.tsx\" -exec grep -l \"bank\\\\|Bank\\\\|Paystack\\\\|paystack\" {} \\\\;)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}; [print\\(k\\) for k in deps if 'radix' in k or k in ['cmdk','vaul','sonner','class-variance-authority','clsx','tailwind-merge']]\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k,':',v\\) for k,v in {**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}.items\\(\\)]\")"
     ],
     "additionalDirectories": [
       "/Users/mac/Desktop/Client projects/agricool/Agricool-web/src/app/(dashboard)/cooling-units"

@@ -116,8 +116,8 @@ function ListingCard({
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <MapPin size={12} />
           <span className="truncate">{listing.location.name}</span>
-          {listing.location.address && (
-            <span className="truncate text-muted-foreground/70">· {listing.location.address}</span>
+          {listing.location.city && (
+            <span className="truncate text-muted-foreground/70">· {listing.location.city}</span>
           )}
         </div>
 

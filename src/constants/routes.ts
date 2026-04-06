@@ -38,11 +38,18 @@ export const ROUTES = {
   MANAGEMENT_USERS: "/management/users",
   MANAGEMENT_COMPANY: "/management/company",
   MANAGEMENT_ANALYSIS: "/management/analysis",
+  MANAGEMENT_FARMER_SURVEYS: "/management/farmer-surveys",
+  MANAGEMENT_SENSORS: "/management/sensors",
 
   // Account
   ACCOUNT_PROFILE: "/account/profile",
   ACCOUNT_BANK_DETAILS: "/account/bank-details",
   ACCOUNT_COUPONS: "/account/coupons",
+  ACCOUNT_FARMER_BANK_ACCOUNTS: "/account/farmer-bank-accounts",
+  ACCOUNT_MARKETPLACE_SETUP: "/account/marketplace-setup",
+
+  // Marketplace extras
+  MARKETPLACE_COMPANY_ORDERS: "/marketplace/company-orders",
 
   // Other
   NOTIFICATIONS: "/notifications",

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { authService } from "@/services/auth-service";
@@ -27,6 +27,12 @@ import {
   LogOut,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
+  Cpu,
+  Landmark,
+  Store,
+  ShoppingCart,
+  Package,
 } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -40,13 +46,21 @@ type NavItem = {
   label: string;
   href: string;
   icon: React.ElementType;
-  roles?: ERoles[];
   badge?: number;
+};
+
+type NavSection = {
+  label: string;
+  items: NavItem[];
+  collapsible?: boolean;
 };
 
 function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const pathname = usePathname();
-  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+  // Exact match for root-level paths to avoid /marketplace matching /marketplace/cart
+  const isActive =
+    pathname === item.href ||
+    (item.href !== ROUTES.MARKETPLACE && pathname.startsWith(item.href + "/"));
 
   return (
     <Link
@@ -73,6 +87,44 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   );
 }
 
+function NavSectionGroup({
+  section,
+  collapsed,
+}: {
+  section: NavSection;
+  collapsed: boolean;
+}) {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <div>
+      {!collapsed && (
+        section.collapsible ? (
+          <button
+            onClick={() => setOpen(!open)}
+            className="flex items-center gap-2 w-full text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2 hover:text-gray-400 transition-colors"
+          >
+            <Settings size={12} />
+            <span className="flex-1 text-left">{section.label}</span>
+            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          </button>
+        ) : (
+          <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">
+            {section.label}
+          </p>
+        )
+      )}
+      {(!section.collapsible || open || collapsed) && (
+        <div className="space-y-1">
+          {section.items.map((item) => (
+            <NavLink key={item.href} item={item} collapsed={collapsed} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Sidebar({
   collapsed,
   unreadCount = 0,
@@ -81,22 +133,25 @@ export function Sidebar({
   unreadCount?: number;
 }) {
   const { user, tokens, revokeSession } = useAuthStore();
-  const router = useRouter();
-  const [managementOpen, setManagementOpen] = useState(true);
   const role = user?.role;
   const { t } = useTranslation();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const isServiceProvider = role === ERoles.SERVICE_PROVIDER;
   const isOperator = role === ERoles.OPERATOR;
-  const canManage = isServiceProvider || isOperator;
+  const isCoolingUser = role === ERoles.COOLING_USER;
+  const isFarmer = role === ERoles.FARMER;
+  const isEndUser = isCoolingUser || isFarmer;
 
   const handleLogout = async () => {
+    setLoggingOut(true);
     try {
       if (tokens?.refresh) {
         await authService.logout(tokens.refresh);
       }
     } catch {
-      // ignore logout errors
+      // ignore
     } finally {
       revokeSession();
       document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
@@ -104,33 +159,108 @@ export function Sidebar({
     }
   };
 
-  const mainNav: NavItem[] = [
+  // ─── Build nav sections based on role ─────────────────────────────────────
+
+  const sections: NavSection[] = [];
+
+  // ── Main (all roles) ──────────────────────────────────────────────────────
+  const mainItems: NavItem[] = [
     { label: t("dashboard"), href: ROUTES.DASHBOARD, icon: LayoutDashboard },
     { label: t("coolingUnits"), href: ROUTES.COOLING_UNITS, icon: Thermometer },
     { label: t("history"), href: ROUTES.HISTORY, icon: History },
-    { label: t("analytics"), href: ROUTES.ANALYTICS, icon: BarChart3 },
-    { label: t("marketplace"), href: ROUTES.MARKETPLACE, icon: ShoppingBag },
-    { label: t("marketPrice"), href: ROUTES.MARKET_PRICE, icon: TrendingUp },
   ];
 
-  const managementNav: NavItem[] = [
-    { label: t("coolingUnits"), href: ROUTES.MANAGEMENT_COOLING_UNITS, icon: Thermometer },
-    { label: t("locations"), href: ROUTES.MANAGEMENT_LOCATIONS, icon: MapPin },
-    { label: t("users"), href: ROUTES.MANAGEMENT_USERS, icon: Users },
-    { label: t("company"), href: ROUTES.MANAGEMENT_COMPANY, icon: Building2 },
-    { label: t("analysis"), href: ROUTES.MANAGEMENT_ANALYSIS, icon: PieChart },
+  // Analytics not shown for end users (cooling_user / farmer)
+  if (!isEndUser) {
+    mainItems.push({ label: t("analytics"), href: ROUTES.ANALYTICS, icon: BarChart3 });
+  }
+
+  mainItems.push({ label: t("marketPrice"), href: ROUTES.MARKET_PRICE, icon: TrendingUp });
+
+  sections.push({ label: "Main", items: mainItems });
+
+  // ── Marketplace ───────────────────────────────────────────────────────────
+  const marketplaceItems: NavItem[] = [
+    { label: "Browse", href: ROUTES.MARKETPLACE, icon: ShoppingBag },
   ];
 
-  const accountNav: NavItem[] = [
+  // Cart & orders only for service_provider and operator (buyers with full access)
+  if (isServiceProvider || isOperator) {
+    marketplaceItems.push(
+      { label: "Cart", href: ROUTES.MARKETPLACE_CART, icon: ShoppingCart },
+      { label: "My Orders", href: ROUTES.MARKETPLACE_ORDERS, icon: Package },
+    );
+  }
+
+  // Sales (listing produce) — all roles can sell
+  marketplaceItems.push({ label: "Sales", href: ROUTES.MARKETPLACE_SALES, icon: TrendingUp });
+
+  // Company orders — service_provider and operator only
+  if (isServiceProvider || isOperator) {
+    marketplaceItems.push({ label: "Company Orders", href: ROUTES.MARKETPLACE_COMPANY_ORDERS, icon: Building2 });
+  }
+
+  sections.push({ label: "Marketplace", items: marketplaceItems });
+
+  // ── Management (service_provider and operator only) ────────────────────────
+  if (isServiceProvider) {
+    sections.push({
+      label: "Management",
+      collapsible: true,
+      items: [
+        { label: t("coolingUnits"), href: ROUTES.MANAGEMENT_COOLING_UNITS, icon: Thermometer },
+        { label: t("locations"), href: ROUTES.MANAGEMENT_LOCATIONS, icon: MapPin },
+        { label: t("users"), href: ROUTES.MANAGEMENT_USERS, icon: Users },
+        { label: t("company"), href: ROUTES.MANAGEMENT_COMPANY, icon: Building2 },
+        { label: t("analysis"), href: ROUTES.MANAGEMENT_ANALYSIS, icon: PieChart },
+        { label: "Farmer Surveys", href: ROUTES.MANAGEMENT_FARMER_SURVEYS, icon: ClipboardList },
+        { label: "Sensors", href: ROUTES.MANAGEMENT_SENSORS, icon: Cpu },
+      ],
+    });
+  } else if (isOperator) {
+    // Operators see: Cooling Users (farmers), Analysis, Farmer Surveys
+    sections.push({
+      label: "Management",
+      collapsible: true,
+      items: [
+        { label: "Cooling Users", href: ROUTES.MANAGEMENT_USERS, icon: Users },
+        { label: t("analysis"), href: ROUTES.MANAGEMENT_ANALYSIS, icon: PieChart },
+        { label: "Farmer Surveys", href: ROUTES.MANAGEMENT_FARMER_SURVEYS, icon: ClipboardList },
+      ],
+    });
+  }
+
+  // ── Account ───────────────────────────────────────────────────────────────
+  const accountItems: NavItem[] = [
     { label: t("profile"), href: ROUTES.ACCOUNT_PROFILE, icon: User },
     { label: t("bankDetails"), href: ROUTES.ACCOUNT_BANK_DETAILS, icon: CreditCard },
-    ...(isServiceProvider ? [{ label: t("coupons"), href: ROUTES.ACCOUNT_COUPONS, icon: Tag }] : []),
   ];
 
-  const helpNav: NavItem[] = [
-    { label: t("notifications"), href: ROUTES.NOTIFICATIONS, icon: Bell, badge: unreadCount },
-    { label: t("faq"), href: ROUTES.FAQ, icon: HelpCircle },
-  ];
+  // Coupons: service_provider and operator
+  if (isServiceProvider || isOperator) {
+    accountItems.push({ label: t("coupons"), href: ROUTES.ACCOUNT_COUPONS, icon: Tag });
+  }
+
+  // Farmer bank accounts: service_provider only (company-level management)
+  if (isServiceProvider) {
+    accountItems.push({ label: "Farmer Bank Accounts", href: ROUTES.ACCOUNT_FARMER_BANK_ACCOUNTS, icon: Landmark });
+  }
+
+  // Marketplace setup: service_provider and operator
+  if (isServiceProvider || isOperator) {
+    accountItems.push({ label: "Marketplace Setup", href: ROUTES.ACCOUNT_MARKETPLACE_SETUP, icon: Store });
+  }
+
+  sections.push({ label: t("account"), items: accountItems });
+
+  // ── Help ──────────────────────────────────────────────────────────────────
+  sections.push({
+    label: "Help",
+    items: [
+      { label: t("notifications"), href: ROUTES.NOTIFICATIONS, icon: Bell, badge: unreadCount },
+      { label: t("faq"), href: ROUTES.FAQ, icon: HelpCircle },
+    ],
+  });
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : "User";
   const roleLabel = role ? role.replace(/_/g, " ") : "";
@@ -161,52 +291,9 @@ export function Sidebar({
 
       {/* Nav links */}
       <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-5">
-        {/* Main */}
-        <div className="space-y-1">
-          {!collapsed && <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">Main</p>}
-          {mainNav.map((item) => (
-            <NavLink key={item.href} item={item} collapsed={collapsed} />
-          ))}
-        </div>
-
-        {/* Management */}
-        {canManage && (
-          <div>
-            {!collapsed && (
-              <button
-                onClick={() => setManagementOpen(!managementOpen)}
-                className="flex items-center gap-2 w-full text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2 hover:text-gray-400 transition-colors"
-              >
-                <Settings size={12} />
-                <span className="flex-1 text-left">Management</span>
-                {managementOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-              </button>
-            )}
-            {(managementOpen || collapsed) && (
-              <div className="space-y-1">
-                {managementNav.map((item) => (
-                  <NavLink key={item.href} item={item} collapsed={collapsed} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Account */}
-        <div className="space-y-1">
-          {!collapsed && <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">{t("account")}</p>}
-          {accountNav.map((item) => (
-            <NavLink key={item.href} item={item} collapsed={collapsed} />
-          ))}
-        </div>
-
-        {/* Help */}
-        <div className="space-y-1">
-          {!collapsed && <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">Help</p>}
-          {helpNav.map((item) => (
-            <NavLink key={item.href} item={item} collapsed={collapsed} />
-          ))}
-        </div>
+        {sections.map((section) => (
+          <NavSectionGroup key={section.label} section={section} collapsed={collapsed} />
+        ))}
       </nav>
 
       <div className="border-t border-gray-800" />
@@ -230,7 +317,7 @@ export function Sidebar({
         </div>
 
         <button
-          onClick={handleLogout}
+          onClick={() => setShowLogoutConfirm(true)}
           className={cn(
             "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors",
             collapsed && "justify-center px-0"
@@ -240,6 +327,39 @@ export function Sidebar({
           {!collapsed && <span>{t("logout")}</span>}
         </button>
       </div>
+
+      {/* Logout confirmation */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100 shrink-0">
+                <LogOut size={18} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Log out?</h3>
+                <p className="text-sm text-gray-500">You will need to sign in again to access your account.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                disabled={loggingOut}
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-sm font-medium text-white transition-colors disabled:opacity-75"
+              >
+                {loggingOut ? "Logging out..." : "Yes, log out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

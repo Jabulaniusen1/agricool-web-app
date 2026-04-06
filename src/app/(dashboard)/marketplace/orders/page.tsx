@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Package, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, Eye, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -175,6 +175,7 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [payingId, setPayingId] = useState<number | null>(null);
 
   const { data: ordersData, isLoading, mutate } = useOrders({
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -196,6 +197,18 @@ export default function OrdersPage() {
       toast.error("Failed to cancel order");
     } finally {
       setCancellingId(null);
+    }
+  }
+
+  async function handlePay(orderId: number) {
+    setPayingId(orderId);
+    try {
+      const res = await marketplaceService.payOrderWithPaystack(orderId);
+      window.open(res.authorizationUrl, "_blank");
+    } catch {
+      toast.error("Failed to initiate payment");
+    } finally {
+      setPayingId(null);
     }
   }
 
@@ -297,15 +310,26 @@ export default function OrdersPage() {
                             View
                           </Button>
                           {order.status === EOrderStatus.PENDING_PAYMENT && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-red-600 border-red-200 hover:bg-red-50"
-                              onClick={() => handleCancel(order.id)}
-                              disabled={cancellingId === order.id}
-                            >
-                              {cancellingId === order.id ? "Cancelling..." : "Cancel"}
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                className="h-8 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => handlePay(order.id)}
+                                disabled={payingId === order.id}
+                              >
+                                <CreditCard size={13} />
+                                {payingId === order.id ? "Loading..." : "Pay"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                onClick={() => handleCancel(order.id)}
+                                disabled={cancellingId === order.id}
+                              >
+                                {cancellingId === order.id ? "Cancelling..." : "Cancel"}
+                              </Button>
+                            </>
                           )}
                         </div>
                       </TableCell>

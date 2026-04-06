@@ -63,15 +63,17 @@ function AddBankDialog({
     formState: { errors },
   } = useForm<BankAccountFormValues>({
     resolver: zodResolver(bankAccountSchema),
-    defaultValues: { bankCode: "", accountNumber: "" },
+    defaultValues: { accountType: "1", bankCode: "", accountNumber: "", accountName: "" },
   });
 
   async function onSubmit(values: BankAccountFormValues) {
     setSaving(true);
     try {
       await marketplaceService.addPaystackAccount({
+        accountType: values.accountType,
         bankCode: values.bankCode,
         accountNumber: values.accountNumber,
+        accountName: values.accountName,
       });
       toast.success("Bank account added successfully");
       onAdded();
@@ -96,6 +98,28 @@ function AddBankDialog({
           <DialogTitle>Add Bank Account</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
+          <div className="space-y-1">
+            <Label>Account Type</Label>
+            <Controller
+              control={control}
+              name="accountType"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Personal</SelectItem>
+                    <SelectItem value="2">Business</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.accountType && (
+              <p className="text-xs text-red-500">{errors.accountType.message}</p>
+            )}
+          </div>
+
           <div className="space-y-1">
             <Label>Bank</Label>
             <Controller
@@ -131,6 +155,18 @@ function AddBankDialog({
             />
             {errors.accountNumber && (
               <p className="text-xs text-red-500">{errors.accountNumber.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="accountName">Account Name</Label>
+            <Input
+              id="accountName"
+              placeholder="e.g. John Doe"
+              {...register("accountName")}
+            />
+            {errors.accountName && (
+              <p className="text-xs text-red-500">{errors.accountName.message}</p>
             )}
           </div>
 
