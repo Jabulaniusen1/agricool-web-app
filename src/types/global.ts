@@ -10,13 +10,14 @@ export enum ERoles {
 
 export enum ECoolingUnitMetric {
   CRATES = "CRATES",
-  METRIC_TONS = "METRIC_TONS",
+  KILOGRAMS = "KILOGRAMS",
 }
 
 export enum ECoolingUnitType {
-  EVAPORATIVE = "EVAPORATIVE",
-  MECHANICAL = "MECHANICAL",
-  OTHERS = "OTHERS",
+  FARM_GATE_STORAGE_ROOM = "FARM_GATE_STORAGE_ROOM",
+  MARKET_STORAGE_ROOM = "MARKET_STORAGE_ROOM",
+  MOVABLE_UNIT = "MOVABLE_UNIT",
+  OTHER = "OTHER",
 }
 
 export enum EPricingType {

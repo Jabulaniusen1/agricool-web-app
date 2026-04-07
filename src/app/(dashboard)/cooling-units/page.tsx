@@ -38,9 +38,10 @@ function temperatureColor(temp: number): string {
 
 function coolingUnitTypeLabel(type: ECoolingUnitType): string {
   const labels: Record<ECoolingUnitType, string> = {
-    [ECoolingUnitType.EVAPORATIVE]: "Evaporative",
-    [ECoolingUnitType.MECHANICAL]: "Mechanical",
-    [ECoolingUnitType.OTHERS]: "Other",
+    [ECoolingUnitType.FARM_GATE_STORAGE_ROOM]: "Farm-gate Storage Room",
+    [ECoolingUnitType.MARKET_STORAGE_ROOM]: "Market Storage Room",
+    [ECoolingUnitType.MOVABLE_UNIT]: "Movable Unit",
+    [ECoolingUnitType.OTHER]: "Other",
   };
   return labels[type] ?? type;
 }
@@ -100,7 +101,7 @@ function CoolingUnitCard({ unit, locationName }: { unit: CoolingUnit; locationNa
           <div className="flex items-center gap-2">
             <Thermometer size={16} className={temperatureColor(unit.latestTemperature)} />
             <span className={cn("text-lg font-bold", temperatureColor(unit.latestTemperature))}>
-              {formatTemperature(unit.latestTemperature)}
+              {unit.latestTemperature != null ? formatTemperature(unit.latestTemperature) : "—"}
             </span>
           </div>
 

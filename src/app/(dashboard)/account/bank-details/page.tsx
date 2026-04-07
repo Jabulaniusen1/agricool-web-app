@@ -131,7 +131,7 @@ function AddBankDialog({
                     <SelectValue placeholder="Select bank" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
-                    {banks.map((bank) => (
+                    {(Array.isArray(banks) ? banks : []).map((bank) => (
                       <SelectItem key={bank.code} value={bank.code}>
                         {bank.name}
                       </SelectItem>

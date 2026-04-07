@@ -264,12 +264,41 @@ class ColdtivateService {
   }
 
   async createCoolingUnit(data: CreateCoolingUnitParams): Promise<CoolingUnit> {
-    const res = await httpClient.post<CoolingUnit>("/storage/v1/cooling-units/", data);
+    const payload = {
+      name: data.name,
+      location: data.locationId,
+      cooling_unit_type: data.coolingUnitType,
+      capacity_in_metric_tons: data.capacityInMetricTons,
+      capacity_in_number_crates: data.capacityInNumberCrates,
+      metric: data.metric,
+      crops: data.crops ?? [],
+      fixed_price: data.pricingType === "FIXED",
+      price: data.pricePerUnit,
+      public: data.public ?? false,
+      power_options: {},
+      crate_length: 0,
+      crate_width: 0,
+      crate_height: 0,
+      crate_weight: 25,
+    };
+    const res = await httpClient.post<CoolingUnit>("/storage/v1/cooling-units/", payload);
     return res.data;
   }
 
   async updateCoolingUnit(id: number, data: UpdateCoolingUnitParams): Promise<CoolingUnit> {
-    const res = await httpClient.put<CoolingUnit>(`/storage/v1/cooling-units/${id}/`, data);
+    const payload = {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.locationId !== undefined && { location: data.locationId }),
+      ...(data.coolingUnitType !== undefined && { cooling_unit_type: data.coolingUnitType }),
+      ...(data.capacityInMetricTons !== undefined && { capacity_in_metric_tons: data.capacityInMetricTons }),
+      ...(data.capacityInNumberCrates !== undefined && { capacity_in_number_crates: data.capacityInNumberCrates }),
+      ...(data.metric !== undefined && { metric: data.metric }),
+      ...(data.crops !== undefined && { crops: data.crops }),
+      ...(data.pricingType !== undefined && { fixed_price: data.pricingType === "FIXED" }),
+      ...(data.pricePerUnit !== undefined && { price: data.pricePerUnit }),
+      ...(data.public !== undefined && { public: data.public }),
+    };
+    const res = await httpClient.put<CoolingUnit>(`/storage/v1/cooling-units/${id}/`, payload);
     return res.data;
   }
 

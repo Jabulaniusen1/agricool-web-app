@@ -52,15 +52,14 @@ export function Header({
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
   const fullName = user ? `${user.firstName} ${user.lastName}` : "User";
 
-  const handleLogout = async () => {
-    try {
-      if (tokens?.refresh) await authService.logout(tokens.refresh);
-    } catch {
-      // ignore
-    } finally {
-      revokeSession();
-      document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-      window.location.replace(ROUTES.SIGN_IN);
+  const handleLogout = () => {
+    // Clear session immediately so the user isn't blocked waiting for the API
+    revokeSession();
+    document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    window.location.replace(ROUTES.SIGN_IN);
+    // Blacklist the refresh token in the background (best-effort)
+    if (tokens?.refresh) {
+      authService.logout(tokens.refresh).catch(() => {});
     }
   };
 

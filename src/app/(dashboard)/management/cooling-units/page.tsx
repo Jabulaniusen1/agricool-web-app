@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -99,32 +99,49 @@ function CoolingUnitFormDialog({
     formState: { errors },
   } = useForm<CoolingUnitFormValues>({
     resolver: zodResolver(coolingUnitSchema),
-    defaultValues: editUnit
-      ? {
-          name: editUnit.name,
-          locationId: editUnit.location,
-          coolingUnitType: editUnit.coolingUnitType,
-          capacityInMetricTons: editUnit.capacityInMetricTons,
-          capacityInNumberCrates: editUnit.capacityInNumberCrates,
-          metric: editUnit.metric,
-          crops: editUnit.crops.map((c) => c.id),
-          pricingType: editUnit.commonPricingType?.pricingType ?? EPricingType.FIXED,
-          pricePerUnit: editUnit.commonPricingType?.price ?? 0,
-          public: editUnit.public,
-        }
-      : {
-          name: "",
-          locationId: 0,
-          coolingUnitType: ECoolingUnitType.MECHANICAL,
-          capacityInMetricTons: 0,
-          capacityInNumberCrates: 0,
-          metric: ECoolingUnitMetric.CRATES,
-          crops: [],
-          pricingType: EPricingType.FIXED,
-          pricePerUnit: 0,
-          public: false,
-        },
+    defaultValues: {
+      name: "",
+      locationId: 0,
+      coolingUnitType: ECoolingUnitType.FARM_GATE_STORAGE_ROOM,
+      capacityInMetricTons: 0,
+      capacityInNumberCrates: 0,
+      metric: ECoolingUnitMetric.CRATES,
+      crops: [],
+      pricingType: EPricingType.FIXED,
+      pricePerUnit: 0,
+      public: false,
+    },
   });
+
+  useEffect(() => {
+    if (editUnit) {
+      reset({
+        name: editUnit.name,
+        locationId: editUnit.location,
+        coolingUnitType: editUnit.coolingUnitType,
+        capacityInMetricTons: editUnit.capacityInMetricTons,
+        capacityInNumberCrates: editUnit.capacityInNumberCrates,
+        metric: editUnit.metric,
+        crops: editUnit.crops.map((c) => c.id),
+        pricingType: editUnit.commonPricingType?.pricingType ?? EPricingType.FIXED,
+        pricePerUnit: editUnit.commonPricingType?.price ?? 0,
+        public: editUnit.public,
+      });
+    } else {
+      reset({
+        name: "",
+        locationId: 0,
+        coolingUnitType: ECoolingUnitType.FARM_GATE_STORAGE_ROOM,
+        capacityInMetricTons: 0,
+        capacityInNumberCrates: 0,
+        metric: ECoolingUnitMetric.CRATES,
+        crops: [],
+        pricingType: EPricingType.FIXED,
+        pricePerUnit: 0,
+        public: false,
+      });
+    }
+  }, [editUnit]);
 
   async function onSubmit(values: CoolingUnitFormValues) {
     setSaving(true);
@@ -201,9 +218,10 @@ function CoolingUnitFormDialog({
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ECoolingUnitType.MECHANICAL}>Mechanical</SelectItem>
-                    <SelectItem value={ECoolingUnitType.EVAPORATIVE}>Evaporative</SelectItem>
-                    <SelectItem value={ECoolingUnitType.OTHERS}>Others</SelectItem>
+                    <SelectItem value={ECoolingUnitType.FARM_GATE_STORAGE_ROOM}>Farm-gate Storage Room</SelectItem>
+                    <SelectItem value={ECoolingUnitType.MARKET_STORAGE_ROOM}>Market Storage Room</SelectItem>
+                    <SelectItem value={ECoolingUnitType.MOVABLE_UNIT}>Movable Unit</SelectItem>
+                    <SelectItem value={ECoolingUnitType.OTHER}>Other</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -374,7 +392,7 @@ function CoolingUnitFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ECoolingUnitMetric.CRATES}>Crates</SelectItem>
-                    <SelectItem value={ECoolingUnitMetric.METRIC_TONS}>Metric Tons</SelectItem>
+                    <SelectItem value={ECoolingUnitMetric.KILOGRAMS}>Kilograms</SelectItem>
                   </SelectContent>
                 </Select>
               )}

@@ -144,18 +144,15 @@ export function Sidebar({
   const isFarmer = role === ERoles.FARMER;
   const isEndUser = isCoolingUser || isFarmer;
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setLoggingOut(true);
-    try {
-      if (tokens?.refresh) {
-        await authService.logout(tokens.refresh);
-      }
-    } catch {
-      // ignore
-    } finally {
-      revokeSession();
-      document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-      window.location.replace(ROUTES.SIGN_IN);
+    // Clear session immediately so the user isn't blocked waiting for the API
+    revokeSession();
+    document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+    window.location.replace(ROUTES.SIGN_IN);
+    // Blacklist the refresh token in the background (best-effort)
+    if (tokens?.refresh) {
+      authService.logout(tokens.refresh).catch(() => {});
     }
   };
 

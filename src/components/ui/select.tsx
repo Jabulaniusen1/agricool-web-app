@@ -111,11 +111,11 @@ function SelectContent({
   ...props
 }: React.ComponentProps<"div">) {
   const ctx = React.useContext(SelectContext)
-  if (!ctx?.open) return null
   return (
     <div
       className={cn(
         "absolute left-0 top-full z-50 mt-1 w-full min-w-36 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg",
+        !ctx?.open && "hidden",
         className
       )}
       {...props}
@@ -135,6 +135,13 @@ function SelectLabel({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+function extractText(node: React.ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node)
+  if (Array.isArray(node)) return node.map(extractText).join("")
+  if (React.isValidElement(node)) return extractText((node.props as { children?: React.ReactNode }).children)
+  return ""
+}
+
 function SelectItem({
   className,
   children,
@@ -145,7 +152,7 @@ function SelectItem({
   const ctx = React.useContext(SelectContext)
   const isSelected = ctx?.value === value
 
-  const label = typeof children === "string" ? children : undefined
+  const label = extractText(children)
   React.useEffect(() => {
     if (label) ctx?.registerLabel(value, label)
   }, [value, label])

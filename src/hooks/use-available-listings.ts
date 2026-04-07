@@ -3,8 +3,8 @@ import { ListingsQueryParams } from "@/types/api.params";
 import { useApiCall } from "./use-api";
 
 export function useAvailableListings(params?: Partial<ListingsQueryParams>) {
-  const locationId = params?.location;
-  const key = locationId
+  const location = params?.location;
+  const key = location
     ? `available-listings?${new URLSearchParams(
         Object.fromEntries(
           Object.entries(params ?? {})

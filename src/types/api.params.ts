@@ -121,7 +121,7 @@ export type MovementsQueryParams = {
 // ─── Marketplace ──────────────────────────────────────────────────────────────
 
 export type ListingsQueryParams = {
-  location: number;
+  location: string; // "lat,lng"
   companyId?: number;
   coolingUnitId?: number;
   cropId?: number;
@@ -297,8 +297,8 @@ export type CoolingUnitImpactParams = {
 
 export type ImpactSliceParams = {
   companyId: number;
-  from: string;
-  to: string;
+  startDate: string;
+  endDate: string;
 };
 
 export type FarmerImpactParams = {

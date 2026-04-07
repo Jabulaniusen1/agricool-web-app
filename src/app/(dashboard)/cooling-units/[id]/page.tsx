@@ -52,9 +52,10 @@ function getPeriodDates(period: Period): { from: string; to: string } {
 
 function coolingUnitTypeLabel(type: ECoolingUnitType): string {
   const labels: Record<ECoolingUnitType, string> = {
-    [ECoolingUnitType.EVAPORATIVE]: "Evaporative",
-    [ECoolingUnitType.MECHANICAL]: "Mechanical",
-    [ECoolingUnitType.OTHERS]: "Other",
+    [ECoolingUnitType.FARM_GATE_STORAGE_ROOM]: "Farm-gate Storage Room",
+    [ECoolingUnitType.MARKET_STORAGE_ROOM]: "Market Storage Room",
+    [ECoolingUnitType.MOVABLE_UNIT]: "Movable Unit",
+    [ECoolingUnitType.OTHER]: "Other",
   };
   return labels[type] ?? type;
 }

@@ -28,6 +28,44 @@ import {
 } from "@/types/api.params";
 
 class MarketplaceService {
+  private normalizeBanksResponse(data: unknown): Bank[] {
+    const toBank = (item: unknown): Bank | null => {
+      if (!item || typeof item !== "object") return null;
+      const obj = item as Record<string, unknown>;
+
+      const code = String(obj.code ?? obj.bankCode ?? "");
+      const name = String(obj.name ?? obj.bankName ?? "");
+      const idRaw = obj.id;
+      const id = typeof idRaw === "number" ? idRaw : Number(code) || 0;
+      const country = String(obj.country ?? obj.countryCode ?? "NG");
+
+      if (!code || !name) return null;
+      return { id, code, name, country };
+    };
+
+    if (Array.isArray(data)) {
+      return data.map(toBank).filter((bank): bank is Bank => bank !== null);
+    }
+
+    if (data && typeof data === "object") {
+      const obj = data as Record<string, unknown>;
+      const candidateArrays = [
+        obj.results,
+        obj.banks,
+        obj.bankCodes,
+        obj.data,
+      ];
+
+      for (const candidate of candidateArrays) {
+        if (Array.isArray(candidate)) {
+          return candidate.map(toBank).filter((bank): bank is Bank => bank !== null);
+        }
+      }
+    }
+
+    return [];
+  }
+
   // ─── Cart ─────────────────────────────────────────────────────────────────────
 
   async getCart(): Promise<Cart> {
@@ -211,8 +249,8 @@ class MarketplaceService {
   // ─── Payment & Banking ────────────────────────────────────────────────────────
 
   async getBanks(): Promise<Bank[]> {
-    const res = await httpClient.get<Bank[]>("/marketplace/data/banks/");
-    return res.data;
+    const res = await httpClient.get<unknown>("/marketplace/data/banks/");
+    return this.normalizeBanksResponse(res.data);
   }
 
   async getPaystackAccounts(): Promise<PaystackAccount[]> {

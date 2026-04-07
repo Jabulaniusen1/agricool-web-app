@@ -27,6 +27,18 @@ import { AvailableListing, Crop } from "@/types/global";
 import { formatCurrency, cn } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 
+function toLatLngFromPoint(point?: string): string | null {
+  if (!point) return null;
+  const match = point.match(/POINT\(\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\)/i);
+  if (!match) return null;
+
+  const lng = Number(match[1]);
+  const lat = Number(match[2]);
+  if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+
+  return `${lat},${lng}`;
+}
+
 function ListingCardSkeleton() {
   return (
     <Card>
@@ -155,11 +167,13 @@ export default function MarketplacePage() {
 
   // Auto-select first location once loaded
   const resolvedLocationId = selectedLocationId ?? locations?.[0]?.id ?? null;
+  const resolvedLocation = locations?.find((loc) => loc.id === resolvedLocationId) ?? null;
+  const resolvedLocationLatLng = toLatLngFromPoint(resolvedLocation?.point);
 
   const { data: listings, isLoading } = useAvailableListings(
-    resolvedLocationId
+    resolvedLocationLatLng
       ? {
-          location: resolvedLocationId,
+          location: resolvedLocationLatLng,
           ...(selectedCropId !== "all" ? { cropId: Number(selectedCropId) } : {}),
         }
       : undefined
@@ -257,7 +271,7 @@ export default function MarketplacePage() {
       </div>
 
       {/* No location selected prompt */}
-      {!resolvedLocationId && !isLoading && (
+      {!resolvedLocationLatLng && !isLoading && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <MapPin className="text-muted-foreground mb-3" size={40} />
@@ -279,7 +293,7 @@ export default function MarketplacePage() {
       )}
 
       {/* Empty state */}
-      {!isLoading && resolvedLocationId && filteredListings?.length === 0 && (
+      {!isLoading && resolvedLocationLatLng && filteredListings?.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <Package className="text-muted-foreground mb-3" size={44} />
@@ -306,7 +320,7 @@ export default function MarketplacePage() {
       )}
 
       {/* Listings grid */}
-      {!isLoading && resolvedLocationId && filteredListings && filteredListings.length > 0 && (
+      {!isLoading && resolvedLocationLatLng && filteredListings && filteredListings.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredListings.map((listing) => (
             <ListingCard

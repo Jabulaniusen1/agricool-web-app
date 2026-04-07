@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen antialiased">
+      <body suppressHydrationWarning className="min-h-screen antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
             <AuthInitializer />
