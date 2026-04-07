@@ -148,6 +148,7 @@ export function Sidebar({
     setLoggingOut(true);
     // Clear session immediately so the user isn't blocked waiting for the API
     revokeSession();
+    localStorage.removeItem("auth");
     document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
     window.location.replace(ROUTES.SIGN_IN);
     // Blacklist the refresh token in the background (best-effort)

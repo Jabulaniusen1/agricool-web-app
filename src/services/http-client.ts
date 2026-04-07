@@ -106,6 +106,16 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
     headers: { "Content-Type": "application/json" },
   });
 
+  // Shared unauthorized notifier used by both request/response interceptors
+  let unauthorizedFired = false;
+  const fireUnauthorized = () => {
+    if (unauthorizedFired) return;
+    unauthorizedFired = true;
+    onUnauthorized?.();
+    // Reset after a short delay so future logins work
+    setTimeout(() => { unauthorizedFired = false; }, 2000);
+  };
+
   // Request: proactively refresh if access token is near expiry, then attach
   let proactiveRefreshing = false;
   let proactiveQueue: Array<(token: string | null) => void> = [];
@@ -138,6 +148,9 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
               proactiveRefreshing = false;
             }
           }
+        } else if (isTokenExpired(tokens.access)) {
+          // Both access and refresh are unusable (or refresh missing): force logout now.
+          fireUnauthorized();
         } else {
           config.headers["Authorization"] = `Bearer ${tokens.access}`;
         }
@@ -156,17 +169,8 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
 
   // Response: convert keys to camelCase, handle 401
   let isRefreshing = false;
-  let unauthorizedFired = false;
   type QueueEntry = { resolve: (token: string) => void; reject: (err: unknown) => void };
   let refreshQueue: QueueEntry[] = [];
-
-  const fireUnauthorized = () => {
-    if (unauthorizedFired) return;
-    unauthorizedFired = true;
-    onUnauthorized?.();
-    // Reset after a short delay so future logins work
-    setTimeout(() => { unauthorizedFired = false; }, 2000);
-  };
 
   instance.interceptors.response.use(
     (response) => {

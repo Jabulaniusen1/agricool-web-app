@@ -31,11 +31,28 @@ const SERVICE_PROVIDER_ROUTES = [
   "/account/farmer-bank-accounts",
 ];
 
+function isJwtExpired(token: string): boolean {
+  try {
+    const [, payloadB64 = ""] = token.split(".");
+    if (!payloadB64) return true;
+
+    const normalized = payloadB64.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded)) as { exp?: number };
+
+    if (typeof payload.exp !== "number") return true;
+    return Date.now() / 1000 >= payload.exp;
+  } catch {
+    return true;
+  }
+}
+
 function parseAuthCookie(cookie: string | undefined): { isAuthenticated: boolean; role: string | null } {
   if (!cookie) return { isAuthenticated: false, role: null };
   try {
     const parsed = JSON.parse(cookie);
-    const isAuthenticated = !!(parsed?.state?.tokens?.access);
+    const accessToken = parsed?.state?.tokens?.access as string | undefined;
+    const isAuthenticated = !!(accessToken && !isJwtExpired(accessToken));
     const role = parsed?.state?.user?.role ?? null;
     return { isAuthenticated, role };
   } catch {

@@ -101,7 +101,7 @@ function ImpactTab({ companyId, range }: { companyId: number; range: DateRange }
   const { from, to } = getDateRange(range);
   const { data, isLoading } = useApiCall(
     `impact-data-${companyId}-${range}`,
-    () => impactService.getImpactData({ companyId, from, to })
+    () => impactService.getImpactData({ companyId, startDate: from, endDate: to })
   );
 
   const revenueByUnit = data?.coolingUnitUtilization?.map((cu) => ({
@@ -174,7 +174,7 @@ function UtilizationTab({ companyId, range }: { companyId: number; range: DateRa
   const { from, to } = getDateRange(range);
   const { data, isLoading } = useApiCall(
     `impact-data-${companyId}-${range}`,
-    () => impactService.getImpactData({ companyId, from, to })
+    () => impactService.getImpactData({ companyId, startDate: from, endDate: to })
   );
 
   const utilizationData = data?.coolingUnitUtilization?.map((cu) => ({

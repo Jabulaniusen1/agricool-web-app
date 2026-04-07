@@ -44,6 +44,7 @@ export const ROUTES = {
   // Account
   ACCOUNT_PROFILE: "/account/profile",
   ACCOUNT_BANK_DETAILS: "/account/bank-details",
+  ACCOUNT_BANK_DETAILS_ADD: "/account/bank-details/add",
   ACCOUNT_COUPONS: "/account/coupons",
   ACCOUNT_FARMER_BANK_ACCOUNTS: "/account/farmer-bank-accounts",
   ACCOUNT_MARKETPLACE_SETUP: "/account/marketplace-setup",

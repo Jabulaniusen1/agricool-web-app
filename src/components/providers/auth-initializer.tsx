@@ -17,6 +17,7 @@ if (typeof window !== "undefined") {
     refreshToken: (token) => authService.refreshToken(token),
     onUnauthorized: () => {
       useAuthStore.getState().revokeSession();
+      localStorage.removeItem("auth");
       document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
       window.location.replace(ROUTES.SIGN_IN);
     },
@@ -35,6 +36,7 @@ export function AuthInitializer() {
       refreshToken: (token) => authService.refreshToken(token),
       onUnauthorized: () => {
         revokeSession();
+        localStorage.removeItem("auth");
         document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
         router.replace(ROUTES.SIGN_IN);
       },

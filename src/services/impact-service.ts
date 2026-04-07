@@ -3,8 +3,8 @@ import { CompanyImpact, CoolingUnitImpact, ImpactData } from "@/types/global";
 import { CoolingUnitImpactParams, ImpactSliceParams } from "@/types/api.params";
 
 class ImpactService {
-  async getCompanyImpact(companyId: number): Promise<CompanyImpact> {
-    const res = await impactClient.post<CompanyImpact>("/company-slice/", { companyId });
+  async getCompanyImpact(companyId: number, startDate: string, endDate: string): Promise<CompanyImpact> {
+    const res = await impactClient.post<CompanyImpact>("/company-slice/", { companyId, startDate, endDate });
     return res.data;
   }
 

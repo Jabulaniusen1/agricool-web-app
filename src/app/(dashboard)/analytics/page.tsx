@@ -100,11 +100,11 @@ export default function AnalyticsPage() {
     setError(null);
 
     Promise.all([
-      impactService.getCompanyImpact(activeCompanyId),
+      impactService.getCompanyImpact(activeCompanyId, dateRange.from, dateRange.to),
       impactService.getImpactData({
         companyId: activeCompanyId,
-        from: dateRange.from,
-        to: dateRange.to,
+        startDate: dateRange.from,
+        endDate: dateRange.to,
       }),
     ])
       .then(([ci, id]) => {

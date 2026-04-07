@@ -428,7 +428,8 @@ export type Bank = {
 
 export type PaystackAccount = {
   id: number;
-  bankName: string;
+  bankName?: string;
+  bankCode?: string;
   accountNumber: string;
   accountName: string;
   isDefault: boolean;
