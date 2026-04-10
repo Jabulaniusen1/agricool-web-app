@@ -88,15 +88,18 @@ function isTokenExpired(token: string, bufferSeconds = 30): boolean {
 let getAuthStore: (() => { tokens: { access: string; refresh: string } | null; revokeSession: () => void }) | null = null;
 let refreshTokenFn: ((token: string) => Promise<{ access: string; refresh?: string }>) | null = null;
 let onUnauthorized: (() => void) | null = null;
+let updateTokensFn: ((tokens: { access: string; refresh?: string }) => void) | null = null;
 
 export function configureHttpClient(opts: {
   getAuth: () => { tokens: { access: string; refresh: string } | null; revokeSession: () => void };
   refreshToken: (token: string) => Promise<{ access: string; refresh?: string }>;
   onUnauthorized: () => void;
+  updateTokens?: (tokens: { access: string; refresh?: string }) => void;
 }) {
   getAuthStore = opts.getAuth;
   refreshTokenFn = opts.refreshToken;
   onUnauthorized = opts.onUnauthorized;
+  if (opts.updateTokens) updateTokensFn = opts.updateTokens;
 }
 
 function createAxiosInstance(baseURL: string): AxiosInstance {
@@ -137,7 +140,10 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
             proactiveRefreshing = true;
             try {
               const result = await refreshTokenFn(tokens.refresh);
+              // Persist new tokens to the store (triggers cookie sync)
+              updateTokensFn?.({ access: result.access, refresh: result.refresh });
               tokens.access = result.access;
+              if (result.refresh) tokens.refresh = result.refresh;
               config.headers["Authorization"] = `Bearer ${result.access}`;
               proactiveQueue.forEach((cb) => cb(result.access));
             } catch {
@@ -209,9 +215,12 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
         try {
           const result = await refreshTokenFn(refreshToken);
           const newAccess = result.access;
-          // Patch the in-memory token so queued requests use the new token
+          // Persist new tokens to the store (triggers cookie sync)
+          updateTokensFn?.({ access: newAccess, refresh: result.refresh });
+          // Patch in-memory token so queued requests use the new token immediately
           if (auth?.tokens) {
             auth.tokens.access = newAccess;
+            if (result.refresh) auth.tokens.refresh = result.refresh;
           }
           originalRequest.headers["Authorization"] = `Bearer ${newAccess}`;
           refreshQueue.forEach(({ resolve }) => resolve(newAccess));

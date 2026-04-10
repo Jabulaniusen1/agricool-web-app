@@ -26,11 +26,13 @@ import { Progress } from "@/components/ui/progress";
 
 import { useCoolingUnits } from "@/hooks/use-cooling-units";
 import { useLocations } from "@/hooks/use-locations";
-import { CoolingUnit, ECoolingUnitType } from "@/types/global";
+import { useAuthStore } from "@/stores/auth";
+import { CoolingUnit, ECoolingUnitType, ERoles } from "@/types/global";
 import { formatTemperature, formatPercent, cn, debounce } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 
 function temperatureColor(temp: number | null): string {
+  if (temp === null) return "text-muted-foreground";
   if (temp < 5) return "text-blue-600";
   if (temp <= 25) return "text-green-600";
   return "text-orange-500";
@@ -159,6 +161,10 @@ function CoolingUnitCard({ unit, locationName }: { unit: CoolingUnit; locationNa
 }
 
 export default function CoolingUnitsPage() {
+  const { user } = useAuthStore();
+  const canManage =
+    user?.role === ERoles.SERVICE_PROVIDER || user?.role === ERoles.OPERATOR;
+
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
@@ -200,13 +206,15 @@ export default function CoolingUnitsPage() {
           </p>
         </div>
 
-        <Link
-          href={ROUTES.MANAGEMENT_COOLING_UNITS}
-          className="inline-flex items-center gap-1.5 self-start rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-700 sm:self-auto"
-        >
-          <Plus size={16} />
-          Add Cooling Unit
-        </Link>
+        {canManage && (
+          <Link
+            href={ROUTES.MANAGEMENT_COOLING_UNITS}
+            className="inline-flex items-center gap-1.5 self-start rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-700 sm:self-auto"
+          >
+            <Plus size={16} />
+            Add Cooling Unit
+          </Link>
+        )}
       </div>
 
       {/* Filter bar */}
@@ -258,13 +266,15 @@ export default function CoolingUnitsPage() {
                     ? `No results for "${debouncedSearch}"`
                     : "No cooling units match the selected filters."}
                 </p>
-                <Link
-                  href={ROUTES.MANAGEMENT_COOLING_UNITS}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
-                >
-                  <Plus size={14} />
-                  Add Cooling Unit
-                </Link>
+                {canManage && (
+                  <Link
+                    href={ROUTES.MANAGEMENT_COOLING_UNITS}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+                  >
+                    <Plus size={14} />
+                    Add Cooling Unit
+                  </Link>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import { authService } from "@/services/auth-service";
+import { useLogout } from "@/hooks/use-logout";
 import { ERoles } from "@/types/global";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -14,7 +14,6 @@ import {
   BarChart3,
   ShoppingBag,
   TrendingUp,
-  Settings,
   MapPin,
   Users,
   Building2,
@@ -35,8 +34,6 @@ import {
   Package,
 } from "lucide-react";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -57,7 +54,6 @@ type NavSection = {
 
 function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const pathname = usePathname();
-  // Exact match for root-level paths to avoid /marketplace matching /marketplace/cart
   const isActive =
     pathname === item.href ||
     (item.href !== ROUTES.MARKETPLACE && pathname.startsWith(item.href + "/"));
@@ -65,21 +61,26 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   return (
     <Link
       href={item.href}
+      title={collapsed ? item.label : undefined}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
+        "relative flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-150 select-none",
+        collapsed ? "justify-center px-0 py-3" : "px-3.5 py-2.5",
         isActive
-          ? "bg-green-500/10 text-green-400"
-          : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+          ? "bg-green-500/15 text-green-400"
+          : "text-gray-400 hover:bg-white/5 hover:text-gray-100"
       )}
     >
-      <item.icon size={18} className="shrink-0" />
+      {isActive && !collapsed && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-green-500 rounded-r-full" />
+      )}
+      <item.icon size={19} className="shrink-0" />
       {!collapsed && (
         <>
           <span className="flex-1 truncate">{item.label}</span>
           {item.badge != null && item.badge > 0 && (
-            <Badge className="h-5 min-w-5 text-xs px-1 bg-red-500/20 text-red-400 border-0">
+            <span className="inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full text-[11px] font-semibold bg-red-500/20 text-red-400">
               {item.badge > 99 ? "99+" : item.badge}
-            </Badge>
+            </span>
           )}
         </>
       )}
@@ -87,7 +88,7 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   );
 }
 
-function NavSectionGroup({
+function SectionGroup({
   section,
   collapsed,
 }: {
@@ -97,25 +98,24 @@ function NavSectionGroup({
   const [open, setOpen] = useState(true);
 
   return (
-    <div>
+    <div className="space-y-0.5">
       {!collapsed && (
         section.collapsible ? (
           <button
             onClick={() => setOpen(!open)}
-            className="flex items-center gap-2 w-full text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2 hover:text-gray-400 transition-colors"
+            className="flex items-center gap-1.5 w-full text-[10px] font-bold text-gray-600 uppercase tracking-widest px-3.5 mb-1 hover:text-gray-400 transition-colors"
           >
-            <Settings size={12} />
             <span className="flex-1 text-left">{section.label}</span>
-            {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
           </button>
         ) : (
-          <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-widest px-3 mb-2">
+          <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest px-3.5 mb-1">
             {section.label}
           </p>
         )
       )}
       {(!section.collapsible || open || collapsed) && (
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {section.items.map((item) => (
             <NavLink key={item.href} item={item} collapsed={collapsed} />
           ))}
@@ -132,11 +132,11 @@ export function Sidebar({
   collapsed: boolean;
   unreadCount?: number;
 }) {
-  const { user, tokens, revokeSession } = useAuthStore();
+  const { user } = useAuthStore();
   const role = user?.role;
   const { t } = useTranslation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
+  const logout = useLogout();
 
   const isServiceProvider = role === ERoles.SERVICE_PROVIDER;
   const isOperator = role === ERoles.OPERATOR;
@@ -144,63 +144,36 @@ export function Sidebar({
   const isFarmer = role === ERoles.FARMER;
   const isEndUser = isCoolingUser || isFarmer;
 
-  const handleLogout = () => {
-    setLoggingOut(true);
-    // Clear session immediately so the user isn't blocked waiting for the API
-    revokeSession();
-    localStorage.removeItem("auth");
-    document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-    window.location.replace(ROUTES.SIGN_IN);
-    // Blacklist the refresh token in the background (best-effort)
-    if (tokens?.refresh) {
-      authService.logout(tokens.refresh).catch(() => {});
-    }
-  };
-
-  // ─── Build nav sections based on role ─────────────────────────────────────
+  // ── Nav sections ──────────────────────────────────────────────────────────
 
   const sections: NavSection[] = [];
 
-  // ── Main (all roles) ──────────────────────────────────────────────────────
   const mainItems: NavItem[] = [
     { label: t("dashboard"), href: ROUTES.DASHBOARD, icon: LayoutDashboard },
     { label: t("coolingUnits"), href: ROUTES.COOLING_UNITS, icon: Thermometer },
     { label: t("history"), href: ROUTES.HISTORY, icon: History },
   ];
-
-  // Analytics not shown for end users (cooling_user / farmer)
   if (!isEndUser) {
     mainItems.push({ label: t("analytics"), href: ROUTES.ANALYTICS, icon: BarChart3 });
   }
-
   mainItems.push({ label: t("marketPrice"), href: ROUTES.MARKET_PRICE, icon: TrendingUp });
-
   sections.push({ label: "Main", items: mainItems });
 
-  // ── Marketplace ───────────────────────────────────────────────────────────
   const marketplaceItems: NavItem[] = [
     { label: "Browse", href: ROUTES.MARKETPLACE, icon: ShoppingBag },
   ];
-
-  // Cart & orders only for service_provider and operator (buyers with full access)
   if (isServiceProvider || isOperator) {
     marketplaceItems.push(
       { label: "Cart", href: ROUTES.MARKETPLACE_CART, icon: ShoppingCart },
       { label: "My Orders", href: ROUTES.MARKETPLACE_ORDERS, icon: Package },
     );
   }
-
-  // Sales (listing produce) — all roles can sell
   marketplaceItems.push({ label: "Sales", href: ROUTES.MARKETPLACE_SALES, icon: TrendingUp });
-
-  // Company orders — service_provider and operator only
   if (isServiceProvider || isOperator) {
     marketplaceItems.push({ label: "Company Orders", href: ROUTES.MARKETPLACE_COMPANY_ORDERS, icon: Building2 });
   }
-
   sections.push({ label: "Marketplace", items: marketplaceItems });
 
-  // ── Management (service_provider and operator only) ────────────────────────
   if (isServiceProvider) {
     sections.push({
       label: "Management",
@@ -216,7 +189,6 @@ export function Sidebar({
       ],
     });
   } else if (isOperator) {
-    // Operators see: Cooling Users (farmers), Analysis, Farmer Surveys
     sections.push({
       label: "Management",
       collapsible: true,
@@ -228,30 +200,21 @@ export function Sidebar({
     });
   }
 
-  // ── Account ───────────────────────────────────────────────────────────────
   const accountItems: NavItem[] = [
     { label: t("profile"), href: ROUTES.ACCOUNT_PROFILE, icon: User },
     { label: t("bankDetails"), href: ROUTES.ACCOUNT_BANK_DETAILS, icon: CreditCard },
   ];
-
-  // Coupons: service_provider and operator
   if (isServiceProvider || isOperator) {
     accountItems.push({ label: t("coupons"), href: ROUTES.ACCOUNT_COUPONS, icon: Tag });
   }
-
-  // Farmer bank accounts: service_provider only (company-level management)
   if (isServiceProvider) {
     accountItems.push({ label: "Farmer Bank Accounts", href: ROUTES.ACCOUNT_FARMER_BANK_ACCOUNTS, icon: Landmark });
   }
-
-  // Marketplace setup: service_provider and operator
   if (isServiceProvider || isOperator) {
     accountItems.push({ label: "Marketplace Setup", href: ROUTES.ACCOUNT_MARKETPLACE_SETUP, icon: Store });
   }
-
   sections.push({ label: t("account"), items: accountItems });
 
-  // ── Help ──────────────────────────────────────────────────────────────────
   sections.push({
     label: "Help",
     items: [
@@ -262,52 +225,63 @@ export function Sidebar({
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : "User";
   const roleLabel = role ? role.replace(/_/g, " ") : "";
+  const initials = getInitials(fullName);
 
   return (
     <aside
       className={cn(
-        "flex flex-col h-full bg-gray-950 border-r border-gray-800 transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        "flex flex-col h-full bg-gray-950 border-r border-white/5 transition-all duration-300 overflow-hidden shrink-0",
+        collapsed ? "w-[60px]" : "w-60"
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-800">
-        <Image
-          src="/agricool_logo.png"
-          alt="Agricool"
-          width={collapsed ? 32 : 36}
-          height={collapsed ? 32 : 36}
-          className="shrink-0 object-contain"
-        />
+      <div
+        className={cn(
+          "flex items-center gap-3 border-b border-white/5 shrink-0",
+          collapsed ? "justify-center px-0 py-4" : "px-4 py-4"
+        )}
+      >
+        <div className="shrink-0 w-8 h-8 rounded-xl bg-green-950/80 ring-1 ring-green-800/50 flex items-center justify-center">
+          <Image
+            src="/agricool_logo.png"
+            alt="Agricool"
+            width={22}
+            height={22}
+            className="object-contain"
+          />
+        </div>
         {!collapsed && (
-          <div>
-            <span className="font-bold text-sm text-white">Agricool</span>
-            <span className="text-[11px] text-gray-500 block">Agrisens</span>
+          <div className="min-w-0">
+            <p className="font-bold text-sm text-white tracking-tight leading-none">Agricool</p>
+            <p className="text-[11px] text-gray-500 mt-0.5">Agrisens</p>
           </div>
         )}
       </div>
 
-      {/* Nav links */}
-      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-5">
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 space-y-4 [&::-webkit-scrollbar]:w-0">
         {sections.map((section) => (
-          <NavSectionGroup key={section.label} section={section} collapsed={collapsed} />
+          <SectionGroup key={section.label} section={section} collapsed={collapsed} />
         ))}
       </nav>
 
-      <div className="border-t border-gray-800" />
-
-      {/* User info + logout */}
-      <div className="px-2 py-3 space-y-1">
-        <div className={cn("flex items-center gap-3 px-3 py-2 rounded-lg", collapsed && "justify-center")}>
-          <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-green-900/60 text-green-400 text-xs font-bold">
-              {getInitials(fullName)}
-            </AvatarFallback>
-          </Avatar>
+      {/* User + logout */}
+      <div className="shrink-0 border-t border-white/5 px-2 py-2 space-y-0.5">
+        <div
+          className={cn(
+            "flex items-center gap-2.5 px-2 py-2 rounded-lg",
+            collapsed && "justify-center"
+          )}
+        >
+          <div className="w-8 h-8 rounded-full bg-green-900/60 ring-1 ring-green-800/40 flex items-center justify-center shrink-0 text-green-400 text-xs font-bold">
+            {initials}
+          </div>
           {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate">{fullName}</p>
-              <p className="text-xs text-gray-500 truncate capitalize">
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-semibold text-gray-200 truncate leading-none mb-0.5">
+                {fullName}
+              </p>
+              <p className="text-[11px] text-gray-500 truncate capitalize">
                 {roleLabel.toLowerCase()}
               </p>
             </div>
@@ -316,43 +290,44 @@ export function Sidebar({
 
         <button
           onClick={() => setShowLogoutConfirm(true)}
+          title={collapsed ? t("logout") : undefined}
           className={cn(
-            "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors",
-            collapsed && "justify-center px-0"
+            "flex items-center gap-3 w-full rounded-lg text-sm font-medium text-gray-500 hover:bg-red-500/10 hover:text-red-400 transition-colors",
+            collapsed ? "justify-center px-0 py-3" : "px-3.5 py-2.5"
           )}
         >
-          <LogOut size={16} />
+          <LogOut size={18} className="shrink-0" />
           {!collapsed && <span>{t("logout")}</span>}
         </button>
       </div>
 
-      {/* Logout confirmation */}
+      {/* Logout confirmation modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100 shrink-0">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
                 <LogOut size={18} className="text-red-600" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Log out?</h3>
-                <p className="text-sm text-gray-500">You will need to sign in again to access your account.</p>
+                <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                  You&apos;ll need to sign in again to access your account.
+                </p>
               </div>
             </div>
-            <div className="flex gap-3 pt-1">
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                disabled={loggingOut}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-sm font-medium text-white transition-colors disabled:opacity-75"
+                onClick={logout}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-[0.98] text-sm font-medium text-white transition-all"
               >
-                {loggingOut ? "Logging out..." : "Yes, log out"}
+                Yes, log out
               </button>
             </div>
           </div>

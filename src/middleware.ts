@@ -14,6 +14,7 @@ const AUTH_ONLY_PATHS = ["/sign-in", "/sign-up", "/password-recovery", "/passwor
 // Routes restricted to SERVICE_PROVIDER + OPERATOR
 const MANAGER_ROUTES = [
   "/management",
+  "/management/cooling-units",
   "/marketplace/cart",
   "/marketplace/orders",
   "/marketplace/company-orders",
@@ -25,7 +26,6 @@ const MANAGER_ROUTES = [
 // Routes restricted to SERVICE_PROVIDER only
 const SERVICE_PROVIDER_ROUTES = [
   "/management/locations",
-  "/management/cooling-units",
   "/management/company",
   "/management/sensors",
   "/account/farmer-bank-accounts",
@@ -51,9 +51,20 @@ function parseAuthCookie(cookie: string | undefined): { isAuthenticated: boolean
   if (!cookie) return { isAuthenticated: false, role: null };
   try {
     const parsed = JSON.parse(cookie);
+    const role = (parsed?.state?.user?.role as string | null | undefined) ?? null;
+
+    // Primary: use refreshExp — session is alive as long as the refresh token is valid.
+    // Interceptors will silently renew the access token, so checking access expiry
+    // here would cause spurious redirects mid-session.
+    const refreshExp = parsed?.state?.tokens?.refreshExp as number | undefined;
+    if (typeof refreshExp === "number") {
+      const isAuthenticated = Date.now() / 1000 < refreshExp;
+      return { isAuthenticated, role };
+    }
+
+    // Fallback for older cookie format (access token only)
     const accessToken = parsed?.state?.tokens?.access as string | undefined;
     const isAuthenticated = !!(accessToken && !isJwtExpired(accessToken));
-    const role = parsed?.state?.user?.role ?? null;
     return { isAuthenticated, role };
   } catch {
     return { isAuthenticated: false, role: null };
@@ -99,8 +110,8 @@ export function middleware(request: NextRequest) {
 
   // Role-based route guards (only when authenticated)
   if (isAuthenticated && role) {
-    const isServiceProvider = role === "SERVICE_PROVIDER";
-    const isOperator = role === "OPERATOR";
+    const isServiceProvider = role === "SERVICE_PROVIDER"; // ERoles.SERVICE_PROVIDER
+    const isOperator = role === "OPERATOR";                 // ERoles.OPERATOR
     const isManager = isServiceProvider || isOperator;
 
     // SERVICE_PROVIDER only routes

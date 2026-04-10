@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { User, Save, Camera } from "lucide-react";
+import { User, Save, Camera, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -19,15 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 import { useAuthStore } from "@/stores/auth";
 import { coldtivateService } from "@/services/coldtivate-service";
 import { profileSchema, ProfileFormValues } from "@/constants/schemas";
-import { EApiGender } from "@/types/global";
+import { EApiGender, ERoles } from "@/types/global";
 import { getInitials } from "@/lib/utils";
 import { LANGUAGE_KEY } from "@/i18n";
+
+const ROLE_META: Record<ERoles, { label: string; color: string; description: string }> = {
+  [ERoles.AUTH]:             { label: "Unverified",       color: "bg-gray-100 text-gray-700 border-gray-200",         description: "Account pending verification" },
+  [ERoles.COOLING_USER]:     { label: "Cooling User",     color: "bg-blue-50 text-blue-700 border-blue-200",          description: "Can monitor and use cooling units" },
+  [ERoles.FARMER]:           { label: "Farmer",           color: "bg-emerald-50 text-emerald-700 border-emerald-200", description: "Can store produce in cooling units" },
+  [ERoles.OPERATOR]:         { label: "Operator",         color: "bg-orange-50 text-orange-700 border-orange-200",    description: "Can manage users and operations" },
+  [ERoles.SERVICE_PROVIDER]: { label: "Service Provider", color: "bg-green-50 text-green-700 border-green-200",       description: "Full access — manages the company and units" },
+};
 
 const LANGUAGES = [
   { value: "en", label: "English" },
@@ -108,32 +115,49 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      {/* Avatar */}
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <Avatar className="h-20 w-20">
-            <AvatarFallback className="bg-green-100 text-green-700 text-xl font-bold">
-              {getInitials(fullName)}
-            </AvatarFallback>
-          </Avatar>
+      {/* Identity card */}
+      <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-4">
+        <div className="relative shrink-0">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xl font-bold select-none">
+            {getInitials(fullName)}
+          </div>
           <button
             type="button"
-            className="absolute -bottom-1 -right-1 rounded-full bg-white border shadow p-1 hover:bg-gray-50"
+            className="absolute -bottom-1 -right-1 rounded-full bg-white border border-gray-200 shadow-sm p-1.5 hover:bg-gray-50 transition-colors"
             title="Change avatar (not implemented)"
           >
-            <Camera size={12} className="text-muted-foreground" />
+            <Camera size={11} className="text-gray-500" />
           </button>
         </div>
-        <div>
-          <p className="font-semibold">{fullName}</p>
-          <p className="text-sm text-muted-foreground">{user.email ?? user.phone}</p>
-          {user.role && (
-            <p className="text-xs text-green-600 capitalize mt-0.5">
-              {user.role.toLowerCase().replace("_", " ")}
-            </p>
-          )}
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-gray-900 truncate">{fullName}</p>
+          <p className="text-sm text-muted-foreground truncate">{user.email ?? user.phone}</p>
+          {/* Role badge — always shown */}
+          {(() => {
+            const meta = user.role ? ROLE_META[user.role] : null;
+            return (
+              <span className={`inline-flex items-center gap-1 mt-2 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${meta ? meta.color : "bg-gray-100 text-gray-500 border-gray-200"}`}>
+                <ShieldCheck size={11} />
+                {meta ? meta.label : "No role assigned"}
+              </span>
+            );
+          })()}
         </div>
       </div>
+
+      {/* Account type banner */}
+      {(() => {
+        const meta = user.role ? ROLE_META[user.role] : null;
+        return (
+          <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${meta ? meta.color : "bg-gray-50 text-gray-600 border-gray-200"}`}>
+            <ShieldCheck size={18} className="shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">{meta ? meta.label : "Unknown account type"}</p>
+              <p className="text-xs opacity-75">{meta ? meta.description : "Your account role has not been set"}</p>
+            </div>
+          </div>
+        );
+      })()}
 
       <Separator />
 
@@ -183,6 +207,24 @@ export default function ProfilePage() {
               {errors.phone && (
                 <p className="text-xs text-red-500">{errors.phone.message}</p>
               )}
+            </div>
+
+            <div className="space-y-1">
+              <Label>Account Type</Label>
+              <div className="flex items-center gap-2 h-9 px-3 rounded-lg border border-border bg-muted/40">
+                {(() => {
+                  const meta = user.role ? ROLE_META[user.role] : null;
+                  return (
+                    <>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${meta ? meta.color : "bg-gray-100 text-gray-500 border-gray-200"}`}>
+                        <ShieldCheck size={10} />
+                        {meta ? meta.label : "Not assigned"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">read only</span>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

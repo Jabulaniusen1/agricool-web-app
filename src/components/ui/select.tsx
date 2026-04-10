@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon } from "lucide-react"
 
@@ -11,6 +12,7 @@ type SelectContextType = {
   setOpen: (v: boolean) => void
   labelMap: Record<string, string>
   registerLabel: (value: string, label: string) => void
+  triggerRef: React.RefObject<HTMLButtonElement | null>
 }
 
 const SelectContext = React.createContext<SelectContextType | null>(null)
@@ -32,6 +34,7 @@ function Select({
   const [open, setOpen] = React.useState(false)
   const [labelMap, setLabelMap] = React.useState<Record<string, string>>({})
   const actual = value !== undefined ? value : internal
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
 
   const handleChange = (v: string) => {
     if (disabled) return
@@ -44,19 +47,35 @@ function Select({
     setLabelMap((prev) => (prev[v] === label ? prev : { ...prev, [v]: label }))
   }, [])
 
-  const ref = React.useRef<HTMLDivElement>(null)
+  const containerRef = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      if (
+        containerRef.current && !containerRef.current.contains(target) &&
+        triggerRef.current && !triggerRef.current.contains(target)
+      ) {
+        setOpen(false)
+      }
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
   return (
-    <SelectContext.Provider value={{ value: actual, onValueChange: handleChange, open: disabled ? false : open, setOpen: disabled ? () => {} : setOpen, labelMap, registerLabel }}>
-      <div ref={ref} className={cn("relative", disabled && "opacity-50 pointer-events-none")}>
+    <SelectContext.Provider
+      value={{
+        value: actual,
+        onValueChange: handleChange,
+        open: disabled ? false : open,
+        setOpen: disabled ? () => {} : setOpen,
+        labelMap,
+        registerLabel,
+        triggerRef,
+      }}
+    >
+      <div ref={containerRef} className={cn("relative", disabled && "opacity-50 pointer-events-none")}>
         {children}
       </div>
     </SelectContext.Provider>
@@ -72,6 +91,7 @@ function SelectTrigger({
   const ctx = React.useContext(SelectContext)
   return (
     <button
+      ref={ctx?.triggerRef}
       type="button"
       onClick={() => ctx?.setOpen(!ctx.open)}
       aria-expanded={ctx?.open}
@@ -111,17 +131,47 @@ function SelectContent({
   ...props
 }: React.ComponentProps<"div">) {
   const ctx = React.useContext(SelectContext)
-  return (
+  const [rect, setRect] = React.useState<DOMRect | null>(null)
+  const [mounted, setMounted] = React.useState(false)
+
+  // Only render in browser
+  React.useEffect(() => { setMounted(true) }, [])
+
+  // Measure the trigger position whenever the dropdown opens
+  React.useEffect(() => {
+    if (ctx?.open && ctx.triggerRef.current) {
+      setRect(ctx.triggerRef.current.getBoundingClientRect())
+    }
+  }, [ctx?.open])
+
+  if (!mounted || !ctx?.open || !rect) return null
+
+  const spaceBelow = window.innerHeight - rect.bottom
+  const spaceAbove = rect.top
+  const openUpward = spaceBelow < 220 && spaceAbove > spaceBelow
+
+  const style: React.CSSProperties = {
+    position: "fixed",
+    left: rect.left,
+    width: rect.width,
+    zIndex: 9999,
+    ...(openUpward
+      ? { bottom: window.innerHeight - rect.top + 4 }
+      : { top: rect.bottom + 4 }),
+  }
+
+  return createPortal(
     <div
+      style={style}
       className={cn(
-        "absolute left-0 top-full z-50 mt-1 w-full min-w-36 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg",
-        !ctx?.open && "hidden",
+        "min-w-36 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg",
         className
       )}
       {...props}
     >
-      <div className="p-1">{children}</div>
-    </div>
+      <div className="p-1 max-h-60 overflow-y-auto">{children}</div>
+    </div>,
+    document.body
   )
 }
 
@@ -155,6 +205,7 @@ function SelectItem({
   const label = extractText(children)
   React.useEffect(() => {
     if (label) ctx?.registerLabel(value, label)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, label])
 
   return (

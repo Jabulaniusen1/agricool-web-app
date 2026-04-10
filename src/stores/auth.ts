@@ -3,7 +3,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { User } from "@/types/global";
-import { authService } from "@/services/auth-service";
 
 interface AuthTokens {
   access: string;
@@ -16,7 +15,7 @@ interface AuthStore {
   isAuthenticated: boolean;
   setSession: (tokens: AuthTokens, user: User) => void;
   revokeSession: () => void;
-  renewSession: () => Promise<void>;
+  updateTokens: (newTokens: { access: string; refresh?: string }) => void;
   updateUser: (user: Partial<User>) => void;
 }
 
@@ -35,21 +34,15 @@ export const useAuthStore = create<AuthStore>()(
         set({ tokens: null, user: null, isAuthenticated: false });
       },
 
-      renewSession: async () => {
-        const { tokens } = get();
-        if (!tokens?.refresh) return;
-
-        try {
-          const result = await authService.refreshToken(tokens.refresh);
-          set((state) => ({
-            tokens: {
-              access: result.access,
-              refresh: result.refresh ?? state.tokens?.refresh ?? "",
-            },
-          }));
-        } catch {
-          set({ tokens: null, user: null, isAuthenticated: false });
-        }
+      updateTokens: (newTokens) => {
+        set((state) => ({
+          tokens: state.tokens
+            ? {
+                access: newTokens.access,
+                refresh: newTokens.refresh ?? state.tokens.refresh,
+              }
+            : null,
+        }));
       },
 
       updateUser: (userData) => {

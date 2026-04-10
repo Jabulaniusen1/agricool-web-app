@@ -61,6 +61,7 @@ function coolingUnitTypeLabel(type: ECoolingUnitType): string {
 }
 
 function temperatureColor(temp: number | null): string {
+  if (temp === null) return "text-muted-foreground";
   if (temp < 5) return "text-blue-600";
   if (temp <= 25) return "text-green-600";
   return "text-orange-500";

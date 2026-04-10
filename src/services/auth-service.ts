@@ -10,11 +10,26 @@ import {
   SignInResponse,
   RefreshSessionResponse,
 } from "@/types/api.responses";
+import { ERoles } from "@/types/global";
+
+// Backend returns plain strings; map them to the ERoles enum used by the web app.
+// Backend values: "Farmer" | "Operator" | "Service Provider"
+const BACKEND_ROLE_MAP: Record<string, ERoles> = {
+  "Farmer":           ERoles.FARMER,
+  "Operator":         ERoles.OPERATOR,
+  "Service Provider": ERoles.SERVICE_PROVIDER,
+};
 
 class AuthService {
   async signIn(params: SignInParams, recaptchaToken?: string): Promise<SignInResponse> {
     const body = recaptchaToken ? { ...params, recaptchaToken } : params;
     const res = await httpClient.post<SignInResponse>("/user/v1/login/", body);
+    // The backend puts `role` at the top level of the response, not inside `user`.
+    // Merge it into the user object so callers can do setSession(tokens, res.user)
+    // and get res.user.role populated correctly.
+    if (res.data.role) {
+      res.data.user.role = BACKEND_ROLE_MAP[res.data.role] ?? res.data.user.role;
+    }
     return res.data;
   }
 
