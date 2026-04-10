@@ -100,11 +100,12 @@ export default function AddBankDetailsPage() {
     <div className="space-y-6 max-w-xl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button asChild variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-          <Link href={ROUTES.ACCOUNT_BANK_DETAILS}>
-            <ArrowLeft size={16} />
-          </Link>
-        </Button>
+        <Link
+          href={ROUTES.ACCOUNT_BANK_DETAILS}
+          className="h-8 w-8 shrink-0 inline-flex items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          <ArrowLeft size={16} />
+        </Link>
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <CreditCard size={20} className="text-green-600" />

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { CreditCard, Plus, CheckCircle2, Building2, Hash } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -88,12 +87,13 @@ export default function BankDetailsPage() {
           </p>
         </div>
         {!hasAccount && (
-          <Button asChild className="bg-green-600 hover:bg-green-700 gap-1.5">
-            <Link href={ROUTES.ACCOUNT_BANK_DETAILS_ADD}>
-              <Plus size={15} />
-              Add Account
-            </Link>
-          </Button>
+          <Link
+            href={ROUTES.ACCOUNT_BANK_DETAILS_ADD}
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+          >
+            <Plus size={15} />
+            Add Account
+          </Link>
         )}
       </div>
 
@@ -109,12 +109,13 @@ export default function BankDetailsPage() {
           <p className="text-sm text-muted-foreground mb-5">
             Add a bank account to receive payments
           </p>
-          <Button asChild className="bg-green-600 hover:bg-green-700" size="sm">
-            <Link href={ROUTES.ACCOUNT_BANK_DETAILS_ADD}>
-              <Plus size={14} className="mr-1.5" />
-              Add Account
-            </Link>
-          </Button>
+          <Link
+            href={ROUTES.ACCOUNT_BANK_DETAILS_ADD}
+            className="inline-flex items-center h-8 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+          >
+            <Plus size={14} className="mr-1.5" />
+            Add Account
+          </Link>
         </div>
       )}
 

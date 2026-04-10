@@ -87,7 +87,7 @@ export const coolingUnitSchema = z.object({
   capacityInMetricTons: z.number().positive("Capacity must be positive"),
   capacityInNumberCrates: z.number().int().positive("Capacity must be positive"),
   metric: z.string().min(1, "Metric is required"),
-  crops: z.array(z.number()).optional().default([]),
+  crops: z.array(z.number()),
   pricingType: z.string().min(1, "Pricing type is required"),
   pricePerUnit: z.number().nonnegative("Price must be non-negative"),
   currency: z.string().optional(),
