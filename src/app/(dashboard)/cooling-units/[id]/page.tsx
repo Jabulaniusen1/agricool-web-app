@@ -60,7 +60,7 @@ function coolingUnitTypeLabel(type: ECoolingUnitType): string {
   return labels[type] ?? type;
 }
 
-function temperatureColor(temp: number): string {
+function temperatureColor(temp: number | null): string {
   if (temp < 5) return "text-blue-600";
   if (temp <= 25) return "text-green-600";
   return "text-orange-500";
@@ -219,7 +219,7 @@ export default function CoolingUnitDetailPage() {
                   <p
                     className={cn(
                       "text-3xl font-bold",
-                      temperatureColor(unit!.latestTemperature)
+                      unit!.latestTemperature != null ? temperatureColor(unit!.latestTemperature) : ""
                     )}
                   >
                     {formatTemperature(unit!.latestTemperature)}
@@ -384,7 +384,7 @@ export default function CoolingUnitDetailPage() {
                     </div>
                     <div className="p-4 rounded-lg bg-muted space-y-1">
                       <p className="text-xs text-muted-foreground">Latest Temperature</p>
-                      <p className={cn("font-semibold", temperatureColor(unit.latestTemperature))}>
+                      <p className={cn("font-semibold", unit.latestTemperature != null ? temperatureColor(unit.latestTemperature) : "")}>
                         {formatTemperature(unit.latestTemperature)}
                       </p>
                     </div>

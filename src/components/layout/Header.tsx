@@ -81,7 +81,7 @@ export function Header({
 
   return (
     <>
-      <header className="h-14 border-b bg-background/95 backdrop-blur-sm shadow-sm flex items-center gap-4 px-4 shrink-0">
+      <header className="relative z-60 h-14 border-b bg-background/95 backdrop-blur-sm shadow-sm flex items-center gap-4 px-4 shrink-0">
         <Button variant="ghost" size="icon" onClick={onMenuToggle} className="lg:hidden">
           <Menu size={20} />
         </Button>

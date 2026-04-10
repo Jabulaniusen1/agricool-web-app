@@ -30,7 +30,7 @@ import { CoolingUnit, ECoolingUnitType } from "@/types/global";
 import { formatTemperature, formatPercent, cn, debounce } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 
-function temperatureColor(temp: number): string {
+function temperatureColor(temp: number | null): string {
   if (temp < 5) return "text-blue-600";
   if (temp <= 25) return "text-green-600";
   return "text-orange-500";
@@ -99,9 +99,9 @@ function CoolingUnitCard({ unit, locationName }: { unit: CoolingUnit; locationNa
 
           {/* Temperature */}
           <div className="flex items-center gap-2">
-            <Thermometer size={16} className={temperatureColor(unit.latestTemperature)} />
-            <span className={cn("text-lg font-bold", temperatureColor(unit.latestTemperature))}>
-              {unit.latestTemperature != null ? formatTemperature(unit.latestTemperature) : "—"}
+            <Thermometer size={16} className={unit.latestTemperature != null ? temperatureColor(unit.latestTemperature) : "text-muted-foreground"} />
+            <span className={cn("text-lg font-bold", unit.latestTemperature != null ? temperatureColor(unit.latestTemperature) : "text-muted-foreground")}>
+              {formatTemperature(unit.latestTemperature)}
             </span>
           </div>
 

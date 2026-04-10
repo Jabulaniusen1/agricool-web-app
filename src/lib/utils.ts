@@ -31,7 +31,8 @@ export function formatWeight(kg: number): string {
   return `${kg.toFixed(1)} kg`;
 }
 
-export function formatTemperature(celsius: number): string {
+export function formatTemperature(celsius: number | null | undefined): string {
+  if (celsius == null) return "—";
   return `${celsius.toFixed(1)}°C`;
 }
 

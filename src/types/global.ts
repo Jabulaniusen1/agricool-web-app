@@ -156,7 +156,7 @@ export type CoolingUnit = {
   coolingUnitType: ECoolingUnitType;
   crops: CoolingUnitCrop[];
   operators: number[];
-  latestTemperature: number;
+  latestTemperature: number | null;
   crateWeight: number;
   commodityInfos: CommodityInfo[];
   public: boolean;

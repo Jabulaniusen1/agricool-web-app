@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Thermometer, MapPin, X, LocateFixed } from "lucide-react";
+import { Plus, Edit, Trash2, Thermometer, MapPin, X } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -45,7 +45,6 @@ import {
 
 import { useCoolingUnits } from "@/hooks/use-cooling-units";
 import { useLocations } from "@/hooks/use-locations";
-import { useMapboxLocation } from "@/hooks/use-mapbox-location";
 import { coldtivateService } from "@/services/coldtivate-service";
 import { coolingUnitSchema, locationSchema, CoolingUnitFormValues, LocationFormValues } from "@/constants/schemas";
 import {
@@ -73,18 +72,6 @@ function CoolingUnitFormDialog({
   const [saving, setSaving] = useState(false);
   const [showNewLocation, setShowNewLocation] = useState(false);
   const [creatingLocation, setCreatingLocation] = useState(false);
-  const { getLocation, loading: locating, error: locationError } = useMapboxLocation();
-
-  async function handleUseMyLocation() {
-    const result = await getLocation();
-    if (!result) return;
-    locationForm.setValue("latitude", result.latitude);
-    locationForm.setValue("longitude", result.longitude);
-    if (result.city) locationForm.setValue("city", result.city);
-    if (result.state) locationForm.setValue("state", result.state);
-    if (result.street) locationForm.setValue("street", result.street);
-    if (result.zipCode) locationForm.setValue("zipCode", result.zipCode);
-  }
 
   const locationForm = useForm<LocationFormValues>({
     resolver: zodResolver(locationSchema),
@@ -321,18 +308,6 @@ function CoolingUnitFormDialog({
                         {...locationForm.register("street")}
                         className="bg-white text-sm"
                       />
-                      <button
-                        type="button"
-                        onClick={handleUseMyLocation}
-                        disabled={locating}
-                        className="flex items-center gap-1.5 text-xs text-green-700 hover:text-green-800 font-medium disabled:opacity-50"
-                      >
-                        <LocateFixed size={12} />
-                        {locating ? "Detecting location..." : "Use my current location"}
-                      </button>
-                      {locationError && (
-                        <p className="text-xs text-red-500">{locationError}</p>
-                      )}
 
                       <div className="grid grid-cols-2 gap-2">
                         <div>
