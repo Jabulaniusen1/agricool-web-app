@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ChevronRight, ChevronLeft, Check, Plus, Trash2, Loader2 } from "lucide-react";
 import { mutate } from "swr";
@@ -17,10 +15,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import { useFarmers } from "@/hooks/use-farmers";
-import { useCoolingUnits, useCrops } from "@/hooks/use-cooling-units";
+import { useCoolingUnits, useCoolingUnitCrops } from "@/hooks/use-cooling-units";
 import { useDashboardStore } from "@/stores/dashboard";
 import { coldtivateService } from "@/services/coldtivate-service";
-import { Farmer, Crop, CoolingUnit, EPricingType } from "@/types/global";
+import { Farmer, CoolingUnitCrop, CoolingUnit, EPricingType } from "@/types/global";
 import { ROUTES } from "@/constants/routes";
 
 const STEPS = ["Farmer", "Crop", "Crates", "Pricing", "Confirm"];
@@ -39,7 +37,7 @@ export default function CheckInPage() {
 
   const [step, setStep] = useState(0);
   const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
-  const [selectedCrop, setSelectedCrop] = useState<Crop | null>(null);
+  const [selectedCrop, setSelectedCrop] = useState<CoolingUnitCrop | null>(null);
   const [selectedCoolingUnit, setSelectedCoolingUnit] = useState<CoolingUnit | null>(null);
   const [crates, setCrates] = useState<CrateEntry[]>([{ weight: 0 }]);
   const [pricingType, setPricingType] = useState<string>(EPricingType.FIXED as string);
@@ -48,7 +46,7 @@ export default function CheckInPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: farmers } = useFarmers();
-  const { data: crops } = useCrops();
+  const { data: crops } = useCoolingUnitCrops();
   const { data: coolingUnits } = useCoolingUnits();
 
   const filteredFarmers = farmers?.filter((f) => {
