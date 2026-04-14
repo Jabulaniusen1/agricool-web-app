@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Thermometer, MapPin, X } from "lucide-react";
+import { Plus, Edit, Trash2, Thermometer, MapPin, X, LocateFixed, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -72,6 +72,7 @@ function CoolingUnitFormDialog({
   const [saving, setSaving] = useState(false);
   const [showNewLocation, setShowNewLocation] = useState(false);
   const [creatingLocation, setCreatingLocation] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   const locationForm = useForm<LocationFormValues>({
     resolver: zodResolver(locationSchema),
@@ -308,6 +309,82 @@ function CoolingUnitFormDialog({
                         {...locationForm.register("street")}
                         className="bg-white text-sm"
                       />
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500 font-medium">Coordinates *</span>
+                        <button
+                          type="button"
+                          disabled={geoLoading}
+                          onClick={() => {
+                            if (!navigator.geolocation) {
+                              toast.error("Geolocation is not supported by your browser");
+                              return;
+                            }
+                            setGeoLoading(true);
+                            const fillFromAddress = async (lat: number, lng: number) => {
+                              try {
+                                const res = await fetch(
+                                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+                                  { headers: { "Accept-Language": "en" } }
+                                );
+                                const data = await res.json();
+                                const addr = data.address ?? {};
+                                const city = addr.city ?? addr.town ?? addr.village ?? addr.county ?? "";
+                                const state = addr.state ?? "";
+                                const street = addr.road ?? addr.pedestrian ?? addr.footway ?? "";
+                                const streetNum = addr.house_number ? Number(addr.house_number) : undefined;
+                                const zip = addr.postcode ?? "";
+                                if (city) locationForm.setValue("city", city, { shouldValidate: true });
+                                if (state) locationForm.setValue("state", state, { shouldValidate: true });
+                                if (street) locationForm.setValue("street", street, { shouldValidate: true });
+                                if (streetNum) locationForm.setValue("streetNumber", streetNum);
+                                if (zip) locationForm.setValue("zipCode", zip, { shouldValidate: true });
+                              } catch {
+                                // coords already set — address auto-fill silently failed
+                              }
+                            };
+                            const applyCoords = async (lat: number, lng: number, ipCity?: string, ipRegion?: string) => {
+                              locationForm.setValue("latitude", parseFloat(lat.toFixed(6)), { shouldValidate: true });
+                              locationForm.setValue("longitude", parseFloat(lng.toFixed(6)), { shouldValidate: true });
+                              if (ipCity) locationForm.setValue("city", ipCity, { shouldValidate: true });
+                              if (ipRegion) locationForm.setValue("state", ipRegion, { shouldValidate: true });
+                              if (!ipCity) await fillFromAddress(lat, lng);
+                              setGeoLoading(false);
+                              toast.success("Location detected");
+                            };
+                            const fallbackToIp = async () => {
+                              try {
+                                const res = await fetch("https://ipapi.co/json/");
+                                const data = await res.json();
+                                if (data.latitude && data.longitude) {
+                                  await applyCoords(data.latitude, data.longitude, data.city, data.region);
+                                } else {
+                                  throw new Error();
+                                }
+                              } catch {
+                                setGeoLoading(false);
+                                toast.error("Could not detect location. Please enter coordinates manually.");
+                              }
+                            };
+                            navigator.geolocation.getCurrentPosition(
+                              async (pos) => applyCoords(pos.coords.latitude, pos.coords.longitude),
+                              (err) => {
+                                if (err.code === 1) {
+                                  setGeoLoading(false);
+                                  toast.error("Location permission denied. Please allow location access in your browser settings.");
+                                } else {
+                                  fallbackToIp();
+                                }
+                              },
+                              { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+                            );
+                          }}
+                          className="inline-flex items-center gap-1 text-xs text-green-700 bg-white border border-green-200 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded-md transition-colors"
+                        >
+                          {geoLoading ? <Loader2 size={11} className="animate-spin" /> : <LocateFixed size={11} />}
+                          {geoLoading ? "Detecting…" : "Get current location"}
+                        </button>
+                      </div>
 
                       <div className="grid grid-cols-2 gap-2">
                         <div>

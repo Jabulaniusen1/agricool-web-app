@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+      <div className="flex flex-col gap-3">
         {/* Company selector */}
         <Select
           value={activeCompanyId?.toString() ?? ""}
@@ -154,26 +154,26 @@ export default function AnalyticsPage() {
           </SelectContent>
         </Select>
 
-        {/* Date from */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground shrink-0">From</span>
-          <Input
-            type="date"
-            value={dateRange.from}
-            className="w-40"
-            onChange={(e) => setDateRange((r) => ({ ...r, from: e.target.value }))}
-          />
-        </div>
-
-        {/* Date to */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground shrink-0">To</span>
-          <Input
-            type="date"
-            value={dateRange.to}
-            className="w-40"
-            onChange={(e) => setDateRange((r) => ({ ...r, to: e.target.value }))}
-          />
+        {/* Date range */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 shrink-0">From</span>
+            <Input
+              type="date"
+              value={dateRange.from}
+              className="w-36"
+              onChange={(e) => setDateRange((r) => ({ ...r, from: e.target.value }))}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 shrink-0">To</span>
+            <Input
+              type="date"
+              value={dateRange.to}
+              className="w-36"
+              onChange={(e) => setDateRange((r) => ({ ...r, to: e.target.value }))}
+            />
+          </div>
         </div>
       </div>
 
@@ -241,14 +241,14 @@ export default function AnalyticsPage() {
                     data={impactData.monthlySeries}
                     margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis
                       dataKey="month"
-                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 11, fill: "#6b7280" }}
                       tickLine={false}
                     />
                     <YAxis
-                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 11, fill: "#6b7280" }}
                       tickLine={false}
                       axisLine={false}
                       tickFormatter={(v) => `${formatNumber(v as number)}`}
@@ -257,7 +257,7 @@ export default function AnalyticsPage() {
                       formatter={(value: unknown) => [`${formatNumber(value as number)} kg`, "Food Saved"]}
                       contentStyle={{
                         borderRadius: "8px",
-                        border: "1px solid hsl(var(--border))",
+                        border: "1px solid #e5e7eb",
                         fontSize: "12px",
                       }}
                     />
@@ -297,9 +297,7 @@ export default function AnalyticsPage() {
                         cx="50%"
                         cy="50%"
                         outerRadius={100}
-                        label={(entry: { cropName?: string; percent?: number }) =>
-                          `${entry.cropName ?? ""} ${((entry.percent ?? 0) * 100).toFixed(0)}%`
-                        }
+                        label={false}
                         labelLine={false}
                       >
                         {impactData.cropBreakdown.map((_, index) => (
@@ -313,7 +311,7 @@ export default function AnalyticsPage() {
                         formatter={(value: unknown) => [`${formatNumber(value as number)} kg`, "Weight"]}
                         contentStyle={{
                           borderRadius: "8px",
-                          border: "1px solid hsl(var(--border))",
+                          border: "1px solid #e5e7eb",
                           fontSize: "12px",
                         }}
                       />
@@ -372,11 +370,11 @@ export default function AnalyticsPage() {
                     data={impactData.coolingUnitUtilization}
                     margin={{ top: 5, right: 40, left: 0, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
                     <XAxis
                       type="number"
                       domain={[0, 100]}
-                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 11, fill: "#6b7280" }}
                       tickLine={false}
                       tickFormatter={(v) => `${v}%`}
                     />
@@ -384,7 +382,7 @@ export default function AnalyticsPage() {
                       type="category"
                       dataKey="name"
                       width={120}
-                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 11, fill: "#6b7280" }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -392,7 +390,7 @@ export default function AnalyticsPage() {
                       formatter={(value: unknown) => [`${(value as number).toFixed(1)}%`, "Utilization"]}
                       contentStyle={{
                         borderRadius: "8px",
-                        border: "1px solid hsl(var(--border))",
+                        border: "1px solid #e5e7eb",
                         fontSize: "12px",
                       }}
                     />

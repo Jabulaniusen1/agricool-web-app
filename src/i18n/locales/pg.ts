@@ -5,7 +5,7 @@ const pg = {
     history: "History",
     analytics: "Analytics",
     marketplace: "Market",
-    marketPrice: "Market Price",
+    marketPrice: "Commodity Price",
     management: "Management",
     account: "Account",
     notifications: "Notifications",

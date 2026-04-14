@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { mutate } from "swr";
-import { Plus, Edit, Trash2, MapPin } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, LocateFixed, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -89,6 +89,7 @@ function LocationFormDialog({
   onSaved: () => void;
 }) {
   const [saving, setSaving] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   const editCoords = editLocation ? parsePoint(editLocation.point) : null;
 
@@ -157,6 +158,78 @@ function LocationFormDialog({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Coordinates</span>
+              <button
+                type="button"
+                disabled={geoLoading}
+                onClick={() => {
+                  if (!navigator.geolocation) {
+                    toast.error("Geolocation is not supported by your browser");
+                    return;
+                  }
+                  setGeoLoading(true);
+                  const fillFromAddress = async (lat: number, lng: number) => {
+                    try {
+                      const res = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+                        { headers: { "Accept-Language": "en" } }
+                      );
+                      const data = await res.json();
+                      const addr = data.address ?? {};
+                      const city = addr.city ?? addr.town ?? addr.village ?? addr.county ?? "";
+                      const state = addr.state ?? "";
+                      const street = addr.road ?? addr.pedestrian ?? addr.footway ?? "";
+                      const streetNum = addr.house_number ? Number(addr.house_number) : undefined;
+                      const zip = addr.postcode ?? "";
+                      if (city) setValue("city", city, { shouldValidate: true });
+                      if (state) setValue("state", state, { shouldValidate: true });
+                      if (street) setValue("street", street, { shouldValidate: true });
+                      if (streetNum) setValue("streetNumber", streetNum);
+                      if (zip) setValue("zipCode", zip, { shouldValidate: true });
+                    } catch {
+                      // coords already set — address auto-fill silently failed
+                    }
+                  };
+                  const applyCoords = async (lat: number, lng: number, ipCity?: string, ipRegion?: string) => {
+                    setValue("latitude", parseFloat(lat.toFixed(6)), { shouldValidate: true });
+                    setValue("longitude", parseFloat(lng.toFixed(6)), { shouldValidate: true });
+                    if (ipCity) setValue("city", ipCity, { shouldValidate: true });
+                    if (ipRegion) setValue("state", ipRegion, { shouldValidate: true });
+                    if (!ipCity) await fillFromAddress(lat, lng);
+                    setGeoLoading(false);
+                    toast.success("Location detected");
+                  };
+                  const fallbackToIp = async () => {
+                    try {
+                      const res = await fetch("https://ipapi.co/json/");
+                      const data = await res.json();
+                      if (data.latitude && data.longitude) {
+                        await applyCoords(data.latitude, data.longitude, data.city, data.region);
+                      } else {
+                        throw new Error();
+                      }
+                    } catch {
+                      setGeoLoading(false);
+                      toast.error("Could not detect location. Please enter coordinates manually.");
+                    }
+                  };
+                  navigator.geolocation.getCurrentPosition(
+                    async (pos) => applyCoords(pos.coords.latitude, pos.coords.longitude),
+                    (err) => {
+                      if (err.code === 1) {
+                        setGeoLoading(false);
+                        toast.error("Location permission denied. Please allow location access in your browser settings.");
+                      } else {
+                        fallbackToIp();
+                      }
+                    },
+                    { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+                  );
+                }}
+                className="inline-flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1.5 rounded-lg transition-colors"
+              >
+                {geoLoading ? <Loader2 size={12} className="animate-spin" /> : <LocateFixed size={12} />}
+                {geoLoading ? "Detecting…" : "Get current location"}
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">

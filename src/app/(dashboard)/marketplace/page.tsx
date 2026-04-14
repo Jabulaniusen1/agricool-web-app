@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ShoppingCart, Package, MapPin, Thermometer, Filter } from "lucide-react";
+import { ShoppingCart, Package, MapPin, Thermometer, Filter, LocateFixed } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -161,14 +161,32 @@ export default function MarketplacePage() {
   const [selectedCropId, setSelectedCropId] = useState<string>("all");
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
   const [addingId, setAddingId] = useState<number | null>(null);
+  const [geoLatLng, setGeoLatLng] = useState<string | null>(null);
+  const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "granted" | "denied">("idle");
 
   const { data: locations } = useLocations();
   const { data: crops } = useCrops();
 
-  // Auto-select first location once loaded
+  // Request geolocation on mount
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    setGeoStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoLatLng(`${pos.coords.latitude},${pos.coords.longitude}`);
+        setGeoStatus("granted");
+      },
+      () => {
+        setGeoStatus("denied");
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }, []);
+
+  // If geolocation is available use it; otherwise fall back to selected/first location
   const resolvedLocationId = selectedLocationId ?? locations?.[0]?.id ?? null;
   const resolvedLocation = locations?.find((loc) => loc.id === resolvedLocationId) ?? null;
-  const resolvedLocationLatLng = toLatLngFromPoint(resolvedLocation?.point);
+  const resolvedLocationLatLng = geoLatLng ?? toLatLngFromPoint(resolvedLocation?.point);
 
   const { data: listings, isLoading } = useAvailableListings(
     resolvedLocationLatLng
@@ -233,21 +251,62 @@ export default function MarketplacePage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex items-center gap-2 flex-1 flex-wrap">
           <Filter size={16} className="text-muted-foreground shrink-0" />
-          <Select
-            value={resolvedLocationId?.toString() ?? ""}
-            onValueChange={(v) => setSelectedLocationId(Number(v))}
-          >
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select location" />
-            </SelectTrigger>
-            <SelectContent>
-              {locations?.map((loc) => (
-                <SelectItem key={loc.id} value={loc.id.toString()}>
-                  {loc.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+          {/* Geolocation indicator */}
+          {geoStatus === "loading" && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 px-2.5 py-1.5 rounded-lg">
+              <LocateFixed size={13} className="animate-pulse text-green-600" />
+              Detecting location…
+            </span>
+          )}
+          {geoStatus === "granted" && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 px-2.5 py-1.5 rounded-lg">
+              <LocateFixed size={13} />
+              Using your location
+            </span>
+          )}
+
+          {/* Location dropdown — shown when geo denied or overriding */}
+          {(geoStatus === "denied" || geoStatus === "idle") && (
+            <Select
+              value={resolvedLocationId?.toString() ?? ""}
+              onValueChange={(v) => setSelectedLocationId(Number(v))}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations?.map((loc) => (
+                  <SelectItem key={loc.id} value={loc.id.toString()}>
+                    {loc.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* When granted, allow manual override */}
+          {geoStatus === "granted" && (
+            <Select
+              value={selectedLocationId?.toString() ?? ""}
+              onValueChange={(v) => {
+                setSelectedLocationId(Number(v));
+                setGeoLatLng(null);
+                setGeoStatus("denied");
+              }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Change area" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations?.map((loc) => (
+                  <SelectItem key={loc.id} value={loc.id.toString()}>
+                    {loc.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={selectedCropId} onValueChange={(v) => setSelectedCropId(v ?? "all")}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="All crops" />
@@ -270,14 +329,16 @@ export default function MarketplacePage() {
         />
       </div>
 
-      {/* No location selected prompt */}
-      {!resolvedLocationLatLng && !isLoading && (
+      {/* No location yet — waiting for geo or needs manual pick */}
+      {!resolvedLocationLatLng && !isLoading && geoStatus !== "loading" && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <MapPin className="text-muted-foreground mb-3" size={40} />
             <h3 className="font-semibold mb-1">Select a location</h3>
             <p className="text-sm text-muted-foreground">
-              Choose a location above to browse available listings
+              {geoStatus === "denied"
+                ? "Location access was denied. Choose a location above to browse listings."
+                : "Choose a location above to browse available listings."}
             </p>
           </CardContent>
         </Card>

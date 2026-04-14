@@ -63,7 +63,7 @@ function PriceChart({ data }: { data: PredictionGraphData }) {
             }
           }}
         />
-        <YAxis tick={{ fontSize: 11 }} />
+        <YAxis tick={{ fontSize: 11 }} width={60} tickFormatter={(v) => `₦${v}`} />
         <Tooltip
           formatter={(value, name) => [
             typeof value === "number" ? `₦${value.toFixed(2)}` : "—",
@@ -210,10 +210,10 @@ export default function MarketPricePage() {
       <div>
         <h2 className="text-xl font-bold flex items-center gap-2">
           <TrendingUp size={20} className="text-green-600" />
-          Market Price Predictions
+          Commodity Price Predictions
         </h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          AI-powered crop price forecasts for Nigerian markets
+          AI-powered commodity price forecasts for Nigerian markets
         </p>
       </div>
 
@@ -225,57 +225,60 @@ export default function MarketPricePage() {
           <Skeleton className="h-9 w-44" />
         </div>
       ) : (
-        <div className="flex flex-wrap gap-3 items-center">
-          {/* Crop */}
-          <Select
-            value={selectedCropId}
-            onValueChange={(v) => { if (v) setSelectedCropId(v); }}
-            disabled={crops.length === 0}
-          >
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Select crop" />
-            </SelectTrigger>
-            <SelectContent>
-              {crops.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-3">
+          {/* Selectors row */}
+          <div className="flex flex-wrap gap-3">
+            {/* Crop */}
+            <Select
+              value={selectedCropId}
+              onValueChange={(v) => { if (v) setSelectedCropId(v); }}
+              disabled={crops.length === 0}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Select crop" />
+              </SelectTrigger>
+              <SelectContent>
+                {crops.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          {/* State */}
-          <Select
-            value={selectedStateId}
-            onValueChange={(v) => { if (v) setSelectedStateId(v); }}
-            disabled={states.length === 0}
-          >
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Select state" />
-            </SelectTrigger>
-            <SelectContent>
-              {states.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {/* State */}
+            <Select
+              value={selectedStateId}
+              onValueChange={(v) => { if (v) setSelectedStateId(v); }}
+              disabled={states.length === 0}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder="Select state" />
+              </SelectTrigger>
+              <SelectContent>
+                {states.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          {/* Market */}
-          <Select
-            value={selectedMarketId}
-            onValueChange={(v) => { if (v) setSelectedMarketId(v); }}
-            disabled={marketsLoading || markets.length === 0}
-          >
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder={marketsLoading ? "Loading..." : "Select market"} />
-            </SelectTrigger>
-            <SelectContent>
-              {markets.map((m) => (
-                <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {/* Market */}
+            <Select
+              value={selectedMarketId}
+              onValueChange={(v) => { if (v) setSelectedMarketId(v); }}
+              disabled={marketsLoading || markets.length === 0}
+            >
+              <SelectTrigger className="w-full sm:w-44">
+                <SelectValue placeholder={marketsLoading ? "Loading..." : "Select market"} />
+              </SelectTrigger>
+              <SelectContent>
+                {markets.map((m) => (
+                  <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* View toggle */}
-          <div className="ml-auto flex gap-2">
+          <div className="flex gap-2">
             <button
               className={`text-sm px-3 py-1.5 rounded-md border transition-colors ${
                 viewMode === "chart" ? "bg-green-600 text-white border-green-600" : "border-gray-200 hover:bg-gray-100 text-gray-700"

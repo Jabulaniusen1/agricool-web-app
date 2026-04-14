@@ -6,7 +6,7 @@ const en = {
     history: "History",
     analytics: "Analytics",
     marketplace: "Marketplace",
-    marketPrice: "Market Price",
+    marketPrice: "Commodity Price",
     management: "Management",
     account: "Account",
     notifications: "Notifications",
