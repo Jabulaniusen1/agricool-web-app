@@ -11,6 +11,13 @@ export const ROUTES = {
   // Dashboard
   DASHBOARD: "/dashboard",
 
+  // Check-In flow
+  CHECK_IN: "/dashboard/check-in",
+  CHECK_IN_SELECT_CROP_TYPE: "/dashboard/check-in/select-crop-type",
+  CHECK_IN_CROPS: (type: string) => `/dashboard/check-in/crops/${type}`,
+  CHECK_IN_CRATE_SETUP: "/dashboard/check-in/crate-setup",
+  CHECK_IN_CRATE_WEIGHT_PRICING: "/dashboard/check-in/crate-weight-pricing",
+
   // Cooling Units
   COOLING_UNITS: "/cooling-units",
   COOLING_UNIT_DETAIL: (id: number | string) => `/cooling-units/${id}`,

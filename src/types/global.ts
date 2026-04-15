@@ -1,5 +1,19 @@
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
+export enum ECropType {
+  FRUITS = "FRUITS",
+  VEGETABLES = "VEGETABLES",
+  ROOT_VEGETABLES = "ROOT_VEGETABLES",
+  OTHER = "OTHER",
+}
+
+export enum EDateCropped {
+  TODAY = "TODAY",
+  YESTERDAY = "YESTERDAY",
+  DAY_BEFORE = "DAY_BEFORE",
+  EVEN_BEFORE = "EVEN_BEFORE",
+}
+
 export enum ERoles {
   AUTH = "AUTH",
   COOLING_USER = "COOLING_USER",

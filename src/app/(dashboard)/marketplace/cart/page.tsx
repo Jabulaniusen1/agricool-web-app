@@ -231,7 +231,7 @@ export default function CartPage() {
 
   if (isLoading) return <CartSkeleton />;
 
-  if (!displayCart || displayCart.items.length === 0) {
+  if (!displayCart || !displayCart.items || displayCart.items.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
