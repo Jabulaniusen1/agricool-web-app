@@ -13,6 +13,7 @@ type SelectContextType = {
   labelMap: Record<string, string>
   registerLabel: (value: string, label: string) => void
   triggerRef: React.RefObject<HTMLButtonElement | null>
+  contentRef: React.RefObject<HTMLDivElement | null>
 }
 
 const SelectContext = React.createContext<SelectContextType | null>(null)
@@ -35,6 +36,7 @@ function Select({
   const [labelMap, setLabelMap] = React.useState<Record<string, string>>({})
   const actual = value !== undefined ? value : internal
   const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const contentRef = React.useRef<HTMLDivElement>(null)
 
   const handleChange = (v: string) => {
     if (disabled) return
@@ -54,7 +56,8 @@ function Select({
       const target = e.target as Node
       if (
         containerRef.current && !containerRef.current.contains(target) &&
-        triggerRef.current && !triggerRef.current.contains(target)
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        contentRef.current && !contentRef.current.contains(target)
       ) {
         setOpen(false)
       }
@@ -73,6 +76,7 @@ function Select({
         labelMap,
         registerLabel,
         triggerRef,
+        contentRef,
       }}
     >
       <div ref={containerRef} className={cn("relative", disabled && "opacity-50 pointer-events-none")}>
@@ -162,6 +166,7 @@ function SelectContent({
 
   return createPortal(
     <div
+      ref={ctx.contentRef}
       style={style}
       className={cn(
         "min-w-36 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg",

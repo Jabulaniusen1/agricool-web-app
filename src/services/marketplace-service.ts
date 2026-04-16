@@ -195,11 +195,12 @@ class MarketplaceService {
   // ─── Listings ─────────────────────────────────────────────────────────────────
 
   async getAvailableListings(params?: ListingsQueryParams): Promise<AvailableListing[]> {
-    const res = await httpClient.get<AvailableListing[]>(
+    const res = await httpClient.get<PaginatedResponse<AvailableListing> | AvailableListing[]>(
       "/marketplace/buyer/available-listings/",
       { params }
     );
-    return res.data;
+    const data = res.data;
+    return Array.isArray(data) ? data : data.results;
   }
 
   async getAvailableListing(id: number): Promise<AvailableListing> {

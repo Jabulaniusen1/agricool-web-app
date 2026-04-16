@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { User, Save, Camera, ShieldCheck } from "lucide-react";
+import { User, Save, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
 
@@ -117,17 +117,10 @@ export default function ProfilePage() {
 
       {/* Identity card */}
       <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-4">
-        <div className="relative shrink-0">
+        <div className="shrink-0">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xl font-bold select-none">
             {getInitials(fullName)}
           </div>
-          <button
-            type="button"
-            className="absolute -bottom-1 -right-1 rounded-full bg-white border border-gray-200 shadow-sm p-1.5 hover:bg-gray-50 transition-colors"
-            title="Change avatar (not implemented)"
-          >
-            <Camera size={11} className="text-gray-500" />
-          </button>
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-gray-900 truncate">{fullName}</p>

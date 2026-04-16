@@ -93,7 +93,12 @@ class ColdtivateService {
   }
 
   async updateUser(userId: number, data: UpdateUserParams): Promise<User> {
-    const res = await httpClient.patch<User>(`/user/v1/users/${userId}/`, data);
+    const payload = {
+      ...data,
+      lastLogin: new Date().toISOString(),
+      coolingUnits: null,
+    };
+    const res = await httpClient.put<User>(`/user/v1/users/${userId}/`, payload);
     return res.data;
   }
 
