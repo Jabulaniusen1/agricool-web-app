@@ -26,8 +26,49 @@ import {
   SetOrderPickupDetailsParams,
   CreateMarketplaceSetupParams,
 } from "@/types/api.params";
+import { ApiError } from "@/types/api.responses";
 
 class MarketplaceService {
+  private normalizeCoupon(data: Coupon): Coupon {
+    const discountPercentage =
+      data.discountPercentage ??
+      (typeof data.discountPercent === "number"
+        ? data.discountPercent > 1
+          ? data.discountPercent / 100
+          : data.discountPercent
+        : undefined);
+
+    return {
+      ...data,
+      discountPercentage,
+      discountPercent:
+        typeof discountPercentage === "number"
+          ? discountPercentage * 100
+          : data.discountPercent,
+      isActive: data.isActive ?? !data.revokedAt,
+      usageCount: data.usageCount ?? 0,
+    };
+  }
+
+  private normalizeCouponsResponse(data: unknown): Coupon[] {
+    const source = Array.isArray(data)
+      ? data
+      : Array.isArray((data as { nodes?: unknown[] })?.nodes)
+        ? (data as { nodes: unknown[] }).nodes
+        : [];
+
+    return source.map((coupon) => this.normalizeCoupon(coupon as Coupon));
+  }
+
+  private isNoDefaultPaystackAccountError(error: unknown): boolean {
+    const apiError = error as Partial<ApiError>;
+    return (
+      apiError.status === 400 &&
+      typeof apiError.message === "string" &&
+      apiError.message.toLowerCase().includes("no default paystack account")
+    );
+  }
+
   private normalizeBanksResponse(data: unknown): Bank[] {
     const toBank = (item: unknown): Bank | null => {
       if (!item || typeof item !== "object") return null;
@@ -273,23 +314,53 @@ class MarketplaceService {
   }
 
   async setupFarmerBankAccount(data: {
-    farmerId: number;
+    ownedByUserId: number;
     accountType: string;
     bankCode: string;
     accountNumber: string;
     accountName: string;
   }): Promise<void> {
-    await httpClient.post(
-      "/marketplace/company/setup/users-first-paystack-bank-account/",
-      { ...data, countryCode: "NG" }
-    );
+    try {
+      await httpClient.post(
+        "/marketplace/company/setup/users-first-paystack-bank-account/",
+        { ...data, countryCode: "NG" }
+      );
+    } catch (error) {
+      const apiError = error as Partial<ApiError>;
+      if (
+        apiError.status === 404 &&
+        typeof apiError.message === "string" &&
+        apiError.message.toLowerCase().includes("not found")
+      ) {
+        throw new Error("Farmer not found or already has a Paystack bank account");
+      }
+      throw error;
+    }
   }
 
-  async getFarmerBankAccounts(): Promise<FarmerBankAccount[]> {
-    const res = await httpClient.get<FarmerBankAccount[]>(
-      "/marketplace/company/setup/users-paystack-bank-account/"
+  async getFarmerBankAccount(userId: number): Promise<FarmerBankAccount | null> {
+    try {
+      const res = await httpClient.get<FarmerBankAccount>(
+        "/marketplace/company/setup/users-paystack-bank-account/",
+        { params: { userId } }
+      );
+
+      return {
+        ...res.data,
+        ownedByUserId: res.data.ownedByUserId ?? res.data.ownedByUser ?? userId,
+      };
+    } catch (error) {
+      if (this.isNoDefaultPaystackAccountError(error)) return null;
+      throw error;
+    }
+  }
+
+  async getFarmerBankAccounts(userIds: number[]): Promise<FarmerBankAccount[]> {
+    const accounts = await Promise.all(
+      userIds.map((userId) => this.getFarmerBankAccount(userId))
     );
-    return res.data;
+
+    return accounts.filter((account): account is FarmerBankAccount => account !== null);
   }
 
   // ─── Delivery Contacts ────────────────────────────────────────────────────────
@@ -330,8 +401,8 @@ class MarketplaceService {
   // ─── Coupons ─────────────────────────────────────────────────────────────────
 
   async getCoupons(): Promise<Coupon[]> {
-    const res = await httpClient.get<Coupon[]>("/marketplace/seller/coupons/");
-    return res.data;
+    const res = await httpClient.get<unknown>("/marketplace/seller/coupons/");
+    return this.normalizeCouponsResponse(res.data);
   }
 
   async createCoupon(data: {
@@ -344,8 +415,15 @@ class MarketplaceService {
     expiresAt?: string;
     maxUsage?: number;
   }): Promise<Coupon> {
-    const res = await httpClient.post<Coupon>("/marketplace/seller/coupons/", data);
-    return res.data;
+    const discountPercentage =
+      data.discountPercentage ??
+      (typeof data.discountPercent === "number" ? data.discountPercent / 100 : undefined);
+
+    const res = await httpClient.post<Coupon>("/marketplace/seller/coupons/", {
+      code: data.code,
+      discountPercentage,
+    });
+    return this.normalizeCoupon(res.data);
   }
 
   async revokeCoupon(id: number): Promise<void> {
@@ -356,7 +434,7 @@ class MarketplaceService {
 
   async getCompanyOrders(params?: { companyId?: number; status?: string }): Promise<PaginatedResponse<SellerOrder>> {
     const res = await httpClient.get<PaginatedResponse<SellerOrder>>(
-      "/marketplace/company/orders/",
+      "/marketplace/company/orders",
       { params }
     );
     return res.data;

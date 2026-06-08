@@ -112,9 +112,10 @@ export const locationSchema = z.object({
 
 export const couponSchema = z.object({
   code: z.string().min(1, "Coupon code is required").toUpperCase(),
-  discountPercent: z.number().min(0).max(100).optional(),
-  discountAmount: z.number().nonnegative().optional(),
-  expiresAt: z.string().optional(),
+  discountPercent: z
+    .number()
+    .min(1, "Discount must be greater than 0%")
+    .max(99, "Discount must be less than 100%"),
 });
 
 export const deliveryContactSchema = z.object({

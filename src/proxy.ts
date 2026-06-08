@@ -50,21 +50,21 @@ function isJwtExpired(token: string): boolean {
 function parseAuthCookie(cookie: string | undefined): { isAuthenticated: boolean; role: string | null } {
   if (!cookie) return { isAuthenticated: false, role: null };
   try {
-    const parsed = JSON.parse(cookie);
+    const parsed = JSON.parse(decodeURIComponent(cookie));
     const role = (parsed?.state?.user?.role as string | null | undefined) ?? null;
+    const accessToken = parsed?.state?.tokens?.access as string | undefined;
 
     // Primary: use refreshExp — session is alive as long as the refresh token is valid.
     // Interceptors will silently renew the access token, so checking access expiry
     // here would cause spurious redirects mid-session.
     const refreshExp = parsed?.state?.tokens?.refreshExp as number | undefined;
     if (typeof refreshExp === "number") {
-      const isAuthenticated = Date.now() / 1000 < refreshExp;
+      const isAuthenticated = !!accessToken && !!role && Date.now() / 1000 < refreshExp;
       return { isAuthenticated, role };
     }
 
     // Fallback for older cookie format (access token only)
-    const accessToken = parsed?.state?.tokens?.access as string | undefined;
-    const isAuthenticated = !!(accessToken && !isJwtExpired(accessToken));
+    const isAuthenticated = !!(accessToken && role && !isJwtExpired(accessToken));
     return { isAuthenticated, role };
   } catch {
     return { isAuthenticated: false, role: null };

@@ -58,8 +58,8 @@ export default function SignUpCompanyPage() {
     <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 p-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-7">
-        <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
-          <Image src="/agricool_logo.png" alt="Agricool" width={26} height={26} className="object-contain" />
+        <div className="w-14 h-14 bg-white rounded-2xl ring-2 ring-green-100 shadow-sm overflow-hidden flex items-center justify-center shrink-0">
+          <Image src="/agricool_logo.png" alt="Agricool" width={50} height={50} className="object-contain scale-125" />
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900">Create Company Account</h1>

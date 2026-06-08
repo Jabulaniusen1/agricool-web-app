@@ -202,10 +202,33 @@ export type Farmer = {
   companyId?: number;
 };
 
+export type FarmerSurveyCommodity = {
+  id?: number;
+  cropId: number;
+  farmerSurveyId?: number;
+  averagePrice: number;
+  unit: string;
+  quantityTotal: number;
+  quantitySelfConsumed: number;
+  quantitySold: number;
+  quantityBelowMarketPrice: number;
+  averageSeasonInMonths: number | null;
+  currency: string;
+  kgInUnit: number;
+  reasonForLoss: string;
+  dateFilledIn?: Date | string;
+  dateLastModified?: Date | string;
+};
+
 export type FarmerSurvey = {
   id: number;
-  farmerId: number;
-  data: Record<string, unknown>;
+  co: FarmerSurveyCommodity[];
+  userType: string;
+  experience: boolean;
+  experienceDuration: number;
+  farmer: number;
+  dateFilledIn?: Date | string;
+  dateLastModified?: Date | string;
 };
 
 export type ServiceProvider = {
@@ -453,12 +476,15 @@ export type PaystackAccount = {
 
 export type Coupon = {
   id: number;
+  createdAt?: string;
+  revokedAt?: string | null;
   code: string;
   discountPercent?: number;
+  discountPercentage?: number;
   discountAmount?: number;
   expiresAt?: string;
-  isActive: boolean;
-  usageCount: number;
+  isActive?: boolean;
+  usageCount?: number;
 };
 
 export type EligibilityCheckResult = {
@@ -487,11 +513,78 @@ export type CompanyImpact = {
   revenue: number;
 };
 
+export type IndexedMetric<T> = Record<string, T>;
+
+export type CompanyImpactSlice = {
+  compAverageRoomOccupancy?: IndexedMetric<number>;
+  compBeneficiaries?: IndexedMetric<number>;
+  compCapNumCrates?: IndexedMetric<number>;
+  compCapTons?: IndexedMetric<number>;
+  compCoolUsers?: IndexedMetric<number>;
+  compFarmers?: IndexedMetric<number>;
+  compKgIn?: IndexedMetric<number>;
+  compKgOut?: IndexedMetric<number>;
+  compName?: IndexedMetric<string>;
+  compRevenue?: IndexedMetric<number>;
+  compRevenueUsd?: IndexedMetric<number>;
+  compTraders?: IndexedMetric<number>;
+  companyId?: IndexedMetric<number>;
+  coolingUnitTypes?: IndexedMetric<{
+    farmGateStorageRoom?: number;
+    marketStorageRoom?: number;
+    movableUnit?: number;
+  }>;
+  currency?: IndexedMetric<string>;
+  reportDate?: IndexedMetric<string>;
+};
+
 export type CoolingUnitImpact = {
   coolingUnitId: number;
   foodSavedKg: number;
   utilizationPercent: number;
   turnoverDays: number;
+};
+
+export type CoolingUnitImpactSlice = {
+  averageRoomOccupancy?: IndexedMetric<number>;
+  checkInKgCrop?: IndexedMetric<IndexedMetric<number>>;
+  checkOutKgCrop?: IndexedMetric<IndexedMetric<number>>;
+  coolingUnitId?: IndexedMetric<number>;
+  roomKgIn?: IndexedMetric<number>;
+  roomKgOut?: IndexedMetric<number>;
+  roomRevenue?: IndexedMetric<number>;
+  unitName?: IndexedMetric<string>;
+};
+
+export type ImpactMetricDatum = {
+  name: string;
+  value: number | string;
+};
+
+export type ImpactMetricValue = number | string | ImpactMetricDatum | ImpactMetricDatum[];
+
+export type ImpactMetricsRecord = {
+  avgBaselineFarmerRevenueMonth?: ImpactMetricValue;
+  avgBaselinePercLossMonth?: ImpactMetricValue;
+  avgMonthlyFarmerRevenue?: ImpactMetricValue;
+  avgMonthlyPercFoodlossEvolution?: ImpactMetricValue;
+  avgMonthlyPercLoss?: ImpactMetricValue;
+  avgMonthlyPercRevenueIncreaseEvolution?: ImpactMetricValue;
+  baselineKgLossMonth?: ImpactMetricValue;
+  monthlyKgLoss?: ImpactMetricValue;
+  numPostHarvestSurveys?: ImpactMetricValue;
+  possiblePostCheckoutSurveyRoom?: ImpactMetricValue;
+};
+
+export type Co2Metric = {
+  co2Crops?: { co2From?: number; co2To?: number } | string;
+  companyId?: string;
+  coolingUnitId?: string;
+};
+
+export type ImpactSliceData = {
+  impactMetrics?: ImpactMetricsRecord | ImpactMetricsRecord[];
+  co2Metrics?: Co2Metric[];
 };
 
 export type ImpactData = {
@@ -651,13 +744,21 @@ export type RevenueAnalysisEntry = {
 
 export type FarmerBankAccount = {
   id: number;
-  farmer: number;
+  createdAt?: string;
+  createdByUser?: number;
+  farmer?: number;
+  ownedByUser?: number;
+  ownedByUserId?: number;
+  ownedOnBehalfOfCompany?: number | null;
+  accountType?: string;
   bankCode: string;
   bankName?: string;
   accountNumber: string;
   accountName?: string;
   countryCode: string;
-  isDefault: boolean;
+  paystackSubaccountCode?: string;
+  isDefault?: boolean;
+  isDefaultAccount?: boolean;
 };
 
 // ─── Pagination ───────────────────────────────────────────────────────────────

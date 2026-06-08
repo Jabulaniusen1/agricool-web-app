@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { User } from "@/types/global";
+import { Company, User } from "@/types/global";
 
 interface AuthTokens {
   access: string;
@@ -12,8 +12,9 @@ interface AuthTokens {
 interface AuthStore {
   tokens: AuthTokens | null;
   user: User | null;
+  company: Company | null;
   isAuthenticated: boolean;
-  setSession: (tokens: AuthTokens, user: User) => void;
+  setSession: (tokens: AuthTokens, user: User, company?: Company | null) => void;
   revokeSession: () => void;
   updateTokens: (newTokens: { access: string; refresh?: string }) => void;
   updateUser: (user: Partial<User>) => void;
@@ -21,17 +22,18 @@ interface AuthStore {
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       tokens: null,
       user: null,
+      company: null,
       isAuthenticated: false,
 
-      setSession: (tokens, user) => {
-        set({ tokens, user, isAuthenticated: true });
+      setSession: (tokens, user, company = null) => {
+        set({ tokens, user, company, isAuthenticated: true });
       },
 
       revokeSession: () => {
-        set({ tokens: null, user: null, isAuthenticated: false });
+        set({ tokens: null, user: null, company: null, isAuthenticated: false });
       },
 
       updateTokens: (newTokens) => {
@@ -56,6 +58,7 @@ export const useAuthStore = create<AuthStore>()(
       partialize: (state) => ({
         tokens: state.tokens,
         user: state.user,
+        company: state.company,
         isAuthenticated: state.isAuthenticated,
       }),
     }

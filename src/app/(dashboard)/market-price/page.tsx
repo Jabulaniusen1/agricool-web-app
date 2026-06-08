@@ -171,7 +171,7 @@ export default function MarketPricePage() {
     setGraphData(null);
     setMarketsLoading(true);
     coldtivateService
-      .getPredictionMarkets({ state: Number(selectedStateId), country: "NG" })
+      .getPredictionMarkets({ state: Number(selectedStateId) })
       .then((res) => {
         setMarkets(res);
         if (res[0]) setSelectedMarketId(String(res[0].id));

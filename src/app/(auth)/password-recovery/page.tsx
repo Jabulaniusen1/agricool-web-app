@@ -54,8 +54,8 @@ export default function PasswordRecoveryPage() {
     <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 p-8">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-7">
-        <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-4">
-          <Image src="/agricool_logo.png" alt="Agricool" width={36} height={36} className="object-contain" />
+        <div className="w-20 h-20 bg-white rounded-2xl ring-2 ring-green-100 shadow-sm overflow-hidden flex items-center justify-center mb-5">
+          <Image src="/agricool_logo.png" alt="Agricool" width={72} height={72} className="object-contain scale-125" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Forgot Password</h1>
         <p className="text-sm text-gray-500 mt-1">Enter your email to receive a reset link</p>

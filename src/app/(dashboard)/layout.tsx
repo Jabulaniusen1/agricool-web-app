@@ -36,26 +36,31 @@ const BOTTOM_NAV = [
 ] as const;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, tokens, user, revokeSession } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useTranslation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { data: notifications } = useNotifications();
+  const hasSession = isAuthenticated && !!tokens?.access && !!tokens?.refresh && !!user;
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!hasSession) {
+      revokeSession();
+      localStorage.removeItem("auth");
+      document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
       router.replace(ROUTES.SIGN_IN);
     }
-  }, [isAuthenticated, router]);
+  }, [hasSession, revokeSession, router]);
 
   // Close mobile sidebar on route change
   useEffect(() => {
-    setMobileSidebarOpen(false);
+    const id = window.setTimeout(() => setMobileSidebarOpen(false), 0);
+    return () => window.clearTimeout(id);
   }, [pathname]);
 
-  if (!isAuthenticated) return null;
+  if (!hasSession) return null;
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
   const titleKey = PAGE_TITLE_KEYS[pathname];

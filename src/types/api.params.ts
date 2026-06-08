@@ -1,4 +1,4 @@
-import { EPickUpMethod } from "./global";
+import { EPickUpMethod, FarmerSurveyCommodity } from "./global";
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -204,9 +204,17 @@ export type CreateNotificationParams = {
 
 // ─── Farmer Survey ────────────────────────────────────────────────────────────
 
-export type CreateFarmerSurveyParams = {
-  farmerId: number;
-  data: Record<string, unknown>;
+export type FarmerSurveyCommodityParams = Omit<
+  FarmerSurveyCommodity,
+  "id" | "farmerSurveyId" | "dateFilledIn" | "dateLastModified"
+>;
+
+export type UpdateFarmerSurveysParams = {
+  farmer: number;
+  userType: string;
+  experience: "yes" | "no";
+  experienceDuration: number;
+  commodities: FarmerSurveyCommodityParams[];
 };
 
 // ─── Crops & Produce ──────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -56,10 +56,12 @@ type FormValues = z.infer<typeof schema>;
 
 function AddDialog({
   open,
+  existingAccountUserIds,
   onClose,
   onSaved,
 }: {
   open: boolean;
+  existingAccountUserIds: Set<number>;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -76,8 +78,20 @@ function AddDialog({
   async function onSubmit(values: FormValues) {
     setSaving(true);
     try {
+      const selectedFarmer = (farmers ?? []).find((f) => f.id === Number(values.farmerId));
+
+      if (!selectedFarmer?.user?.id) {
+        toast.error("Selected farmer does not have a user account");
+        return;
+      }
+
+      if (existingAccountUserIds.has(selectedFarmer.user.id)) {
+        toast.error("This farmer already has a bank account");
+        return;
+      }
+
       await marketplaceService.setupFarmerBankAccount({
-        farmerId: Number(values.farmerId),
+        ownedByUserId: selectedFarmer.user.id,
         accountType: values.accountType,
         bankCode: values.bankCode,
         accountNumber: values.accountNumber,
@@ -87,8 +101,14 @@ function AddDialog({
       onSaved();
       onClose();
       reset();
-    } catch {
-      toast.error("Failed to add bank account");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error && "message" in error
+            ? String(error.message)
+            : "Failed to add bank account";
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -110,11 +130,16 @@ function AddDialog({
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue placeholder="Select farmer" /></SelectTrigger>
                   <SelectContent className="max-h-56">
-                    {(farmers ?? []).map((f) => (
-                      <SelectItem key={f.id} value={String(f.id)}>
-                        {f.user.firstName} {f.user.lastName}
-                      </SelectItem>
-                    ))}
+                    {(farmers ?? []).map((f) => {
+                      const hasAccount = existingAccountUserIds.has(f.user.id);
+
+                      return (
+                        <SelectItem key={f.id} value={String(f.id)} disabled={hasAccount}>
+                          {f.user.firstName} {f.user.lastName}
+                          {hasAccount ? " - account added" : ""}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               )}
@@ -129,7 +154,11 @@ function AddDialog({
               name="accountType"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <span className="truncate">
+                      {field.value === "2" ? "Business" : "Personal"}
+                    </span>
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">Personal</SelectItem>
                     <SelectItem value="2">Business</SelectItem>
@@ -186,15 +215,33 @@ function AddDialog({
 
 export default function FarmerBankAccountsPage() {
   const [addOpen, setAddOpen] = useState(false);
-  const { data: farmers } = useFarmers();
+  const { data: farmers, isLoading: farmersLoading } = useFarmers();
+  const farmerUserIds = (farmers ?? [])
+    .map((farmer) => farmer.user?.id)
+    .filter((userId): userId is number => Boolean(userId));
+  const farmerBankAccountsKey = farmers
+    ? `farmer-bank-accounts:${farmerUserIds.join(",") || "empty"}`
+    : null;
 
-  const { data: accounts, isLoading, mutate } = useApiCall<FarmerBankAccount[]>(
-    "farmer-bank-accounts",
-    () => marketplaceService.getFarmerBankAccounts()
+  const { data: accounts, isLoading: accountsLoading, mutate } = useApiCall<FarmerBankAccount[]>(
+    farmerBankAccountsKey,
+    () => marketplaceService.getFarmerBankAccounts(farmerUserIds)
+  );
+  const isLoading = farmersLoading || accountsLoading;
+  const existingAccountUserIds = useMemo(
+    () =>
+      new Set(
+        (accounts ?? [])
+          .map((account) => account.ownedByUserId ?? account.ownedByUser ?? account.farmer)
+          .filter((userId): userId is number => Boolean(userId))
+      ),
+    [accounts]
   );
 
-  function farmerName(farmerId: number) {
-    const f = (farmers ?? []).find((f) => f.id === farmerId);
+  function farmerName(farmerId?: number) {
+    if (!farmerId) return "Unknown farmer";
+
+    const f = (farmers ?? []).find((f) => f.id === farmerId || f.user.id === farmerId);
     return f ? `${f.user.firstName} ${f.user.lastName}` : `Farmer #${farmerId}`;
   }
 
@@ -256,13 +303,15 @@ export default function FarmerBankAccountsPage() {
               <TableBody>
                 {accounts.map((acc) => (
                   <TableRow key={acc.id}>
-                    <TableCell className="font-medium text-sm">{farmerName(acc.farmer)}</TableCell>
-                    <TableCell className="text-sm text-gray-600">{acc.bankCode}</TableCell>
+                    <TableCell className="font-medium text-sm">
+                      {farmerName(acc.ownedByUserId ?? acc.farmer)}
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">{acc.bankName ?? acc.bankCode}</TableCell>
                     <TableCell className="text-sm font-mono">{acc.accountNumber}</TableCell>
                     <TableCell className="text-sm">{acc.accountName ?? "—"}</TableCell>
                     <TableCell className="text-sm">{acc.countryCode}</TableCell>
                     <TableCell>
-                      {acc.isDefault && (
+                      {(acc.isDefault ?? acc.isDefaultAccount) && (
                         <CheckCircle2 size={16} className="text-green-600" />
                       )}
                     </TableCell>
@@ -274,7 +323,12 @@ export default function FarmerBankAccountsPage() {
         </CardContent>
       </Card>
 
-      <AddDialog open={addOpen} onClose={() => setAddOpen(false)} onSaved={() => mutate()} />
+      <AddDialog
+        open={addOpen}
+        existingAccountUserIds={existingAccountUserIds}
+        onClose={() => setAddOpen(false)}
+        onSaved={() => mutate()}
+      />
     </div>
   );
 }

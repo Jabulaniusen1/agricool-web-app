@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { signInSchema, SignInFormValues } from "@/constants/schemas";
 import { authService } from "@/services/auth-service";
 import { useAuthStore } from "@/stores/auth";
+import { useDashboardStore } from "@/stores/dashboard";
 import { ROUTES } from "@/constants/routes";
 
 const USER_TYPES = [
@@ -23,6 +24,7 @@ const USER_TYPES = [
 export default function SignInPage() {
   const router = useRouter();
   const { setSession } = useAuthStore();
+  const setSelectedCompany = useDashboardStore((s) => s.setSelectedCompany);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedType, setSelectedType] = useState<"f" | "op" | "sp" | null>(null);
 
@@ -45,7 +47,8 @@ export default function SignInPage() {
           ? `+234${values.username}`
           : values.username;
       const res = await authService.signIn({ ...values, username });
-      setSession({ access: res.access, refresh: res.refresh }, res.user);
+      setSession({ access: res.access, refresh: res.refresh }, res.user, res.company ?? null);
+      setSelectedCompany(res.company?.id ?? null);
       router.replace(ROUTES.DASHBOARD);
     } catch (err: unknown) {
       toast.error((err as { message?: string })?.message ?? "Sign in failed");
@@ -56,8 +59,8 @@ export default function SignInPage() {
     <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 p-8">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-4">
-          <Image src="/agricool_logo.png" alt="Agricool" width={36} height={36} className="object-contain" />
+        <div className="w-20 h-20 bg-white rounded-2xl ring-2 ring-green-100 shadow-sm overflow-hidden flex items-center justify-center mb-5">
+          <Image src="/agricool_logo.png" alt="Agricool" width={72} height={72} className="object-contain scale-125" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
         <p className="text-sm text-gray-500 mt-1">Sign in to your Agricool account</p>

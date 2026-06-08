@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 
 import { useAvailableListings } from "@/hooks/use-available-listings";
+import { useCart } from "@/hooks/use-cart";
 import { useCrops } from "@/hooks/use-cooling-units";
 import { useLocations } from "@/hooks/use-locations";
 import { marketplaceService } from "@/services/marketplace-service";
@@ -196,9 +197,11 @@ export default function MarketplacePage() {
         }
       : undefined
   );
+  const { data: cartData, mutate: mutateCart } = useCart();
   const { cart } = useShoppingCartStore();
+  const displayCart = cartData ?? cart;
 
-  const cartItemCount = cart?.items.length ?? 0;
+  const cartItemCount = displayCart?.items?.length ?? 0;
 
   const filteredListings = listings?.filter((l) => {
     if (!searchQuery) return true;
@@ -214,6 +217,7 @@ export default function MarketplacePage() {
     setAddingId(listing.id);
     try {
       await marketplaceService.addCartItem({ listingId: listing.id });
+      await mutateCart();
       toast.success(`${listing.crop.name} added to cart`);
     } catch {
       toast.error("Failed to add item to cart");

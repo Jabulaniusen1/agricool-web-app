@@ -98,8 +98,7 @@ export default function CompanyPage() {
     try {
       const formData = new FormData();
       formData.append("logo", file);
-      // Pass FormData to updateCompany — service accepts Partial<Company> but backend handles FormData
-      await coldtivateService.updateCompany(company.id, formData as unknown as Partial<Company>);
+      await coldtivateService.updateCompany(company.id, formData);
       await revalidate();
       mutate("companies");
       toast.success("Logo updated successfully");

@@ -48,7 +48,7 @@ import {
   SendOperatorInviteParams,
   SendServiceProviderInviteParams,
   CreateNotificationParams,
-  CreateFarmerSurveyParams,
+  UpdateFarmerSurveysParams,
   CreateCropParams,
   CreateProduceParams,
   AssociateCropWithUnitParams,
@@ -70,8 +70,13 @@ class ColdtivateService {
     return res.data;
   }
 
-  async updateCompany(companyId: number, data: UpdateCompanyParams): Promise<Company> {
-    const res = await httpClient.patch<Company>(`/user/v1/companies/${companyId}/`, data);
+  async updateCompany(companyId: number, data: UpdateCompanyParams | FormData): Promise<Company> {
+    const isMultipart = typeof FormData !== "undefined" && data instanceof FormData;
+    const res = await httpClient.patch<Company>(
+      `/user/v1/companies/${companyId}/`,
+      data,
+      isMultipart ? { headers: { "Content-Type": "multipart/form-data" } } : undefined
+    );
     return res.data;
   }
 
@@ -140,18 +145,15 @@ class ColdtivateService {
     return res.data;
   }
 
-  async getFarmerSurveys(): Promise<FarmerSurvey[]> {
-    const res = await httpClient.get<FarmerSurvey[]>("/user/v1/farmer-survey/");
+  async getFarmerSurveys(farmerId: number): Promise<FarmerSurvey[]> {
+    const res = await httpClient.get<FarmerSurvey[]>("/user/v1/farmer-survey/", {
+      params: { farmerId },
+    });
     return res.data;
   }
 
-  async createFarmerSurvey(data: CreateFarmerSurveyParams): Promise<FarmerSurvey> {
-    const res = await httpClient.post<FarmerSurvey>("/user/v1/farmer-survey/", data);
-    return res.data;
-  }
-
-  async updateFarmerSurvey(surveyId: number, data: Partial<CreateFarmerSurveyParams>): Promise<FarmerSurvey> {
-    const res = await httpClient.patch<FarmerSurvey>(`/user/v1/farmer-survey/${surveyId}/`, data);
+  async updateFarmerSurveys(farmerId: number, data: UpdateFarmerSurveysParams): Promise<FarmerSurvey[]> {
+    const res = await httpClient.put<FarmerSurvey[]>(`/user/v1/farmer-survey/${farmerId}/`, data);
     return res.data;
   }
 
@@ -259,7 +261,11 @@ class ColdtivateService {
   // ─── Cooling Units ────────────────────────────────────────────────────────────
 
   async getCoolingUnits(params?: { locationId?: number; companyId?: number }): Promise<CoolingUnit[]> {
-    const res = await httpClient.get<CoolingUnit[]>("/storage/v1/cooling-units/", { params });
+    const query = {
+      ...(params?.locationId !== undefined && { location: params.locationId }),
+      ...(params?.companyId !== undefined && { company: params.companyId }),
+    };
+    const res = await httpClient.get<CoolingUnit[]>("/storage/v1/cooling-units/", { params: query });
     return res.data;
   }
 
@@ -536,7 +542,7 @@ class ColdtivateService {
     return res.data;
   }
 
-  async getPredictionMarkets(params?: { state?: number; country?: "IN" | "NG" }): Promise<PredictionMarket[]> {
+  async getPredictionMarkets(params?: { state?: number }): Promise<PredictionMarket[]> {
     const res = await httpClient.get<PredictionMarket[]>("/prediction/markets/", { params });
     return res.data;
   }

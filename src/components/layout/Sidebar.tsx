@@ -241,19 +241,19 @@ export function Sidebar({
           collapsed ? "justify-center px-0 py-4" : "px-4 py-4"
         )}
       >
-        <div className="shrink-0 w-8 h-8 rounded-xl bg-green-950/80 ring-1 ring-green-800/50 flex items-center justify-center">
+        <div className="shrink-0 w-12 h-12 rounded-2xl bg-white ring-2 ring-green-500/35 shadow-sm overflow-hidden flex items-center justify-center">
           <Image
             src="/agricool_logo.png"
             alt="Agricool"
-            width={22}
-            height={22}
-            className="object-contain"
+            width={48}
+            height={48}
+            className="object-contain scale-125"
           />
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <p className="font-bold text-sm text-white tracking-tight leading-none">Agricool</p>
-            <p className="text-[11px] text-gray-500 mt-0.5">Agrisens</p>
+            <p className="font-bold text-base text-white tracking-tight leading-none">Agricool</p>
+            <p className="text-xs text-gray-400 mt-1">Agrisens</p>
           </div>
         )}
       </div>

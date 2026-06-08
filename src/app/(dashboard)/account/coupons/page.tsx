@@ -42,7 +42,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { marketplaceService } from "@/services/marketplace-service";
 import { couponSchema } from "@/constants/schemas";
 import { Coupon } from "@/types/global";
-import { formatDate } from "@/lib/utils";
 import { useApiCall } from "@/hooks/use-api";
 
 type CouponFormValues = z.infer<typeof couponSchema>;
@@ -86,7 +85,7 @@ function CreateCouponDialog({
     formState: { errors },
   } = useForm<CouponFormValues>({
     resolver: zodResolver(couponSchema),
-    defaultValues: { code: "", discountPercent: undefined, expiresAt: undefined },
+    defaultValues: { code: "", discountPercent: undefined },
   });
 
   async function onSubmit(values: CouponFormValues) {
@@ -95,15 +94,13 @@ function CreateCouponDialog({
       await marketplaceService.createCoupon({
         code: values.code,
         discountPercent: values.discountPercent,
-        discountAmount: values.discountAmount,
-        expiresAt: values.expiresAt,
       });
       toast.success("Coupon created successfully");
       onCreated();
       onClose();
       reset();
-    } catch {
-      toast.error("Failed to create coupon");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create coupon");
     } finally {
       setSaving(false);
     }
@@ -137,26 +134,14 @@ function CreateCouponDialog({
             <Input
               id="discountPercent"
               type="number"
-              min={0}
-              max={100}
+              min={1}
+              max={99}
               step={1}
               placeholder="e.g. 20"
               {...register("discountPercent", { valueAsNumber: true })}
             />
             {errors.discountPercent && (
               <p className="text-xs text-red-500">{errors.discountPercent.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="expiresAt">Expires At (optional)</Label>
-            <Input
-              id="expiresAt"
-              type="date"
-              {...register("expiresAt")}
-            />
-            {errors.expiresAt && (
-              <p className="text-xs text-red-500">{errors.expiresAt.message}</p>
             )}
           </div>
 
@@ -206,11 +191,6 @@ export default function CouponsPage() {
     } catch {
       toast.error("Failed to copy code");
     }
-  }
-
-  function isExpired(coupon: Coupon): boolean {
-    if (!coupon.expiresAt) return false;
-    return new Date(coupon.expiresAt) < new Date();
   }
 
   return (
@@ -270,7 +250,6 @@ export default function CouponsPage() {
                   <TableRow>
                     <TableHead>Code</TableHead>
                     <TableHead className="text-right">Discount</TableHead>
-                    <TableHead>Expires</TableHead>
                     <TableHead className="text-right">Uses</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -278,8 +257,7 @@ export default function CouponsPage() {
                 </TableHeader>
                 <TableBody>
                   {coupons.map((coupon: Coupon) => {
-                    const expired = isExpired(coupon);
-                    const active = coupon.isActive && !expired;
+                    const active = coupon.isActive ?? !coupon.revokedAt;
                     return (
                       <TableRow key={coupon.id}>
                         <TableCell>
@@ -287,16 +265,13 @@ export default function CouponsPage() {
                         </TableCell>
                         <TableCell className="text-right text-sm">
                           {coupon.discountPercent != null
-                            ? `${coupon.discountPercent}%`
+                            ? `${coupon.discountPercent.toFixed(0)}%`
                             : coupon.discountAmount != null
-                            ? `$${coupon.discountAmount}`
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {coupon.expiresAt ? formatDate(coupon.expiresAt) : "Never"}
+                              ? `$${coupon.discountAmount}`
+                              : "—"}
                         </TableCell>
                         <TableCell className="text-right text-sm tabular-nums">
-                          {coupon.usageCount}
+                          {coupon.usageCount ?? 0}
                         </TableCell>
                         <TableCell className="text-center">
                           {active ? (
@@ -305,7 +280,7 @@ export default function CouponsPage() {
                             </Badge>
                           ) : (
                             <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">
-                              {expired ? "Expired" : "Inactive"}
+                              Inactive
                             </Badge>
                           )}
                         </TableCell>

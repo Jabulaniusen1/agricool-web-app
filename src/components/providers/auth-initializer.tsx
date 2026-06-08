@@ -32,6 +32,24 @@ function buildCookieValue(): string {
   });
 }
 
+function clearAuthArtifacts() {
+  localStorage.removeItem("auth");
+  document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+}
+
+function hasValidStoredSession(): boolean {
+  const state = useAuthStore.getState();
+  const refreshExp = state.tokens?.refresh ? getJwtExp(state.tokens.refresh) : null;
+  return !!(
+    state.isAuthenticated &&
+    state.tokens?.access &&
+    state.tokens?.refresh &&
+    state.user?.role &&
+    refreshExp &&
+    Date.now() / 1000 < refreshExp
+  );
+}
+
 // ─── Synchronous bootstrap (runs before any React render) ────────────────────
 // Configures the HTTP client with token & logout logic immediately when the
 // module is first imported on the client. This ensures the Authorization header
@@ -43,8 +61,7 @@ if (typeof window !== "undefined") {
     updateTokens: (newTokens) => useAuthStore.getState().updateTokens(newTokens),
     onUnauthorized: () => {
       useAuthStore.getState().revokeSession();
-      localStorage.removeItem("auth");
-      document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      clearAuthArtifacts();
       window.location.replace(ROUTES.SIGN_IN);
     },
   });
@@ -56,13 +73,11 @@ export function AuthInitializer() {
   const router = useRouter();
 
   useEffect(() => {
-    // Migration: users logged in before the role-mapping fix have no role stored.
-    // Force them to re-login once so the correct role gets persisted.
-    const state = useAuthStore.getState();
-    if (state.isAuthenticated && !state.user?.role) {
+    // Migration/session guard: users logged in before auth fixes, or users with
+    // broken persisted state, must re-login before any protected UI renders.
+    if (useAuthStore.getState().isAuthenticated && !hasValidStoredSession()) {
       revokeSession();
-      localStorage.removeItem("auth");
-      document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      clearAuthArtifacts();
       router.replace(ROUTES.SIGN_IN);
       return;
     }
@@ -74,8 +89,7 @@ export function AuthInitializer() {
       updateTokens: (newTokens) => useAuthStore.getState().updateTokens(newTokens),
       onUnauthorized: () => {
         revokeSession();
-        localStorage.removeItem("auth");
-        document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+        clearAuthArtifacts();
         router.replace(ROUTES.SIGN_IN);
       },
     });
@@ -86,7 +100,7 @@ export function AuthInitializer() {
       if (cookieValue) {
         document.cookie = `agricool-auth=${encodeURIComponent(cookieValue)}; path=/; max-age=86400; SameSite=Lax`;
       } else {
-        document.cookie = "agricool-auth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+        clearAuthArtifacts();
       }
     };
 

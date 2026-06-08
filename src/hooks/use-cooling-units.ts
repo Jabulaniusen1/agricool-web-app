@@ -1,8 +1,10 @@
 import { coldtivateService } from "@/services/coldtivate-service";
 import { useApiCall } from "./use-api";
 
-export function useCoolingUnits(params?: { locationId?: number; companyId?: number }) {
-  const key = params
+export function useCoolingUnits(params?: { locationId?: number; companyId?: number } | null) {
+  const key = params === null
+    ? null
+    : params
     ? `cooling-units?${new URLSearchParams(
         Object.fromEntries(
           Object.entries(params)
@@ -12,7 +14,7 @@ export function useCoolingUnits(params?: { locationId?: number; companyId?: numb
       ).toString()}`
     : "cooling-units";
 
-  return useApiCall(key, () => coldtivateService.getCoolingUnits(params));
+  return useApiCall(key, () => coldtivateService.getCoolingUnits(params ?? undefined));
 }
 
 export function useCoolingUnit(id: number | null) {

@@ -20,13 +20,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/5 rounded-full" />
         <div className="absolute -bottom-16 -left-16 w-60 h-60 bg-black/10 rounded-full" />
 
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
-            <Image src="/agricool_logo.png" alt="Agricool" width={28} height={28} className="object-contain" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-16 h-16 bg-white rounded-2xl shadow-lg shadow-green-950/20 ring-1 ring-white/70 overflow-hidden flex items-center justify-center">
+            <Image src="/agricool_logo.png" alt="Agricool" width={58} height={58} className="object-contain scale-125" />
           </div>
           <div>
-            <span className="text-white font-bold text-base leading-none block">Agricool</span>
-            <span className="text-green-200/60 text-[11px]">Agrisens</span>
+            <span className="text-white font-bold text-lg leading-none block">Agricool</span>
+            <span className="text-green-100/75 text-xs">Agrisens</span>
           </div>
         </div>
 

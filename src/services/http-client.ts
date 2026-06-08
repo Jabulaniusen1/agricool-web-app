@@ -9,14 +9,24 @@ function toSnakeCase(str: string): string {
 }
 
 function toCamelCase(str: string): string {
-  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  const source = /^[A-Z0-9_\s-]+$/.test(str) ? str.toLowerCase() : str;
+  return source
+    .replace(/^[A-Z]/, (letter) => letter.toLowerCase())
+    .replace(/[\s_-]+([a-zA-Z0-9])/g, (_, letter) => letter.toUpperCase());
 }
 
 function convertKeys<T>(data: unknown, converter: (key: string) => string): T {
+  const isUrlSearchParams =
+    typeof URLSearchParams !== "undefined" && data instanceof URLSearchParams;
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+  if (data instanceof Date || isUrlSearchParams || isFormData) {
+    return data as T;
+  }
+
   if (Array.isArray(data)) {
     return data.map((item) => convertKeys(item, converter)) as T;
   }
-  if (data !== null && typeof data === "object" && !(data instanceof Date)) {
+  if (data !== null && typeof data === "object") {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
       result[converter(key)] = convertKeys(value, converter);
@@ -30,21 +40,31 @@ function convertKeys<T>(data: unknown, converter: (key: string) => string): T {
 
 function extractApiError(error: AxiosError): ApiError {
   const status = error.response?.status ?? 0;
-  const data = error.response?.data as Record<string, unknown> | undefined;
+  const data = error.response?.data;
 
   if (!data) {
     return { message: error.message || "Network error", status };
   }
 
+  if (typeof data === "string") {
+    return { message: data.trim() || error.message || "Request failed", status };
+  }
+
+  if (typeof data !== "object") {
+    return { message: String(data), status };
+  }
+
+  const responseData = data as Record<string, unknown>;
+
   // Django REST Framework typically returns { detail: "..." } or { field: ["error"] }
-  const detail = data.detail as string | undefined;
+  const detail = responseData.detail as string | undefined;
   if (detail) {
     return { message: detail, status };
   }
 
-  const nonFieldErrors = data.non_field_errors as string[] | undefined;
+  const nonFieldErrors = responseData.non_field_errors as string[] | undefined;
   if (nonFieldErrors?.length) {
-    return { message: nonFieldErrors[0], status, details: data as Record<string, string[]> };
+    return { message: nonFieldErrors[0], status, details: responseData as Record<string, string[]> };
   }
 
   // Collect field errors — including nested objects like { user: { phone: ["..."] } }
@@ -67,7 +87,7 @@ function extractApiError(error: AxiosError): ApiError {
     }
   }
 
-  collectErrors(data);
+  collectErrors(responseData);
 
   return { message: firstMessage, status, details: fieldErrors };
 }
