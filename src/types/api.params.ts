@@ -1,4 +1,4 @@
-import { EPickUpMethod, FarmerSurveyCommodity } from "./global";
+import { EPickUpMethod, FarmerSurveyCommodity, SensorDatum } from "./global";
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -88,6 +88,8 @@ export type CreateCoolingUnitParams = {
   currency?: string;
   powerOptions?: string[];
   public?: boolean;
+  sensor?: boolean;
+  sensorData?: SensorDatum;
 };
 
 export type UpdateCoolingUnitParams = Partial<CreateCoolingUnitParams>;

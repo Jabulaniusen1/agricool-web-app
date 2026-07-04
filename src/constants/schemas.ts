@@ -80,6 +80,13 @@ export const checkOutSchema = z.object({
 
 // ─── Cooling Unit ─────────────────────────────────────────────────────────────
 
+export const sensorDatumSchema = z.object({
+  sourceId: z.string().min(1),
+  username: z.string().min(1),
+  password: z.string().min(1),
+  type: z.string().min(1),
+});
+
 export const coolingUnitSchema = z.object({
   name: z.string().min(1, "Name is required"),
   locationId: z.number().int().positive("Location is required"),
@@ -93,6 +100,8 @@ export const coolingUnitSchema = z.object({
   currency: z.string().optional(),
   powerOptions: z.array(z.string()).optional(),
   public: z.boolean().optional(),
+  sensor: z.boolean().optional(),
+  sensorData: sensorDatumSchema.optional(),
 });
 
 // ─── Location ─────────────────────────────────────────────────────────────────

@@ -156,6 +156,13 @@ export type CommodityInfo = {
   maxHumidity: number;
 };
 
+export type SensorDatum = {
+  sourceId: string;
+  username: string;
+  password: string;
+  type: string;
+};
+
 export type CoolingUnit = {
   id: number;
   name: string;

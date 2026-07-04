@@ -291,6 +291,15 @@ class ColdtivateService {
       crate_width: 0,
       crate_height: 0,
       crate_weight: 25,
+      ...(data.sensor && data.sensorData && {
+        sensor: true,
+        sensor_data: {
+          type: data.sensorData.type,
+          source_id: data.sensorData.sourceId,
+          username: data.sensorData.username,
+          password: data.sensorData.password,
+        },
+      }),
     };
     const res = await httpClient.post<CoolingUnit>("/storage/v1/cooling-units/", payload);
     return res.data;
@@ -308,6 +317,15 @@ class ColdtivateService {
       ...(data.pricingType !== undefined && { fixed_price: data.pricingType === "FIXED" }),
       ...(data.pricePerUnit !== undefined && { price: data.pricePerUnit }),
       ...(data.public !== undefined && { public: data.public }),
+      ...(data.sensor && data.sensorData && {
+        sensor: true,
+        sensor_data: {
+          type: data.sensorData.type,
+          source_id: data.sensorData.sourceId,
+          username: data.sensorData.username,
+          password: data.sensorData.password,
+        },
+      }),
     };
     const res = await httpClient.put<CoolingUnit>(`/storage/v1/cooling-units/${id}/`, payload);
     return res.data;
@@ -598,6 +616,39 @@ class ColdtivateService {
 
   async getUserSensors(data: { sources: string[] }): Promise<UserSensor[]> {
     const res = await httpClient.post<UserSensor[]>("/storage/v1/user-sensor/sources/", data);
+    return res.data;
+  }
+
+  // Verifies an Ecozen machine ID against a stored account (mirrors the mobile
+  // cooling-unit sensor flow, matching the backend's actual request/response shape).
+  async verifyEcozenSensor(params: {
+    username: string;
+    password: string;
+    sourceId: string;
+  }): Promise<{ success: string }> {
+    const res = await httpClient.post<{ success: string }>("/storage/v1/ecozen/test-connection/", {
+      username: params.username,
+      password: params.password,
+      source_id: params.sourceId,
+    });
+    return res.data;
+  }
+
+  // Authenticates with a generic sensor integration (ubibot/figorr/victron) and
+  // lists the sources available on that account, for the user to pick one from.
+  async listSensorSources(params: {
+    username: string;
+    password: string;
+    integrationType: string;
+  }): Promise<{ sources: { id: string; name: string }[] }> {
+    const res = await httpClient.post<{ sources: { id: string; name: string }[] }>(
+      "/storage/v1/user-sensor/sources/",
+      {
+        integration_type: params.integrationType,
+        username: params.username,
+        password: params.password,
+      }
+    );
     return res.data;
   }
 }

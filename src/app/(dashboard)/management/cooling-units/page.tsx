@@ -54,6 +54,8 @@ import {
   EPricingType,
 } from "@/types/global";
 import { cn } from "@/lib/utils";
+import { CropsField } from "@/components/features/cooling-units/CropsField";
+import { SensorField } from "@/components/features/cooling-units/SensorField";
 
 // ─── Form Dialog ───────────────────────────────────────────────────────────────
 
@@ -84,6 +86,8 @@ function CoolingUnitFormDialog({
     handleSubmit,
     control,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<CoolingUnitFormValues>({
     resolver: zodResolver(coolingUnitSchema),
@@ -98,6 +102,8 @@ function CoolingUnitFormDialog({
       pricingType: EPricingType.FIXED,
       pricePerUnit: 0,
       public: false,
+      sensor: false,
+      sensorData: undefined,
     },
   });
 
@@ -114,6 +120,8 @@ function CoolingUnitFormDialog({
         pricingType: editUnit.commonPricingType?.pricingType ?? EPricingType.FIXED,
         pricePerUnit: editUnit.commonPricingType?.price ?? 0,
         public: editUnit.public,
+        sensor: editUnit.sensor,
+        sensorData: undefined,
       });
     } else {
       reset({
@@ -127,6 +135,8 @@ function CoolingUnitFormDialog({
         pricingType: EPricingType.FIXED,
         pricePerUnit: 0,
         public: false,
+        sensor: false,
+        sensorData: undefined,
       });
     }
   }, [editUnit]);
@@ -431,6 +441,21 @@ function CoolingUnitFormDialog({
             )}
           </div>
 
+          {/* Commodities */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">Commodities</label>
+            <Controller
+              control={control}
+              name="crops"
+              render={({ field }) => (
+                <CropsField value={field.value} onChange={field.onChange} />
+              )}
+            />
+            {errors.crops && (
+              <p className="text-xs text-red-500 mt-1">{errors.crops.message}</p>
+            )}
+          </div>
+
           {/* Metric */}
           <div>
             <label className="text-sm font-medium mb-1 block">Metric</label>
@@ -519,6 +544,19 @@ function CoolingUnitFormDialog({
                 <p className="text-xs text-red-500 mt-1">{errors.pricePerUnit.message}</p>
               )}
             </div>
+          </div>
+
+          {/* Sensor */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">Sensor</label>
+            <SensorField
+              alreadyConnected={editUnit?.sensor ?? false}
+              sensorData={watch("sensorData")}
+              onChange={(sensor, sensorData) => {
+                setValue("sensor", sensor);
+                setValue("sensorData", sensorData);
+              }}
+            />
           </div>
 
           {/* Actions */}
