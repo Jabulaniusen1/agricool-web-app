@@ -186,6 +186,7 @@ export function Sidebar({
         { label: t("analysis"), href: ROUTES.MANAGEMENT_ANALYSIS, icon: PieChart },
         { label: "Farmer Surveys", href: ROUTES.MANAGEMENT_FARMER_SURVEYS, icon: ClipboardList },
         { label: "Sensors", href: ROUTES.MANAGEMENT_SENSORS, icon: Cpu },
+        { label: "Marketplace Setup", href: ROUTES.MANAGEMENT_MARKETPLACE_SETUP, icon: Store },
       ],
     });
   } else if (isOperator) {
@@ -209,9 +210,6 @@ export function Sidebar({
   }
   if (isServiceProvider) {
     accountItems.push({ label: "Farmer Bank Accounts", href: ROUTES.ACCOUNT_FARMER_BANK_ACCOUNTS, icon: Landmark });
-  }
-  if (isServiceProvider || isOperator) {
-    accountItems.push({ label: "Marketplace Setup", href: ROUTES.ACCOUNT_MARKETPLACE_SETUP, icon: Store });
   }
   sections.push({ label: t("account"), items: accountItems });
 

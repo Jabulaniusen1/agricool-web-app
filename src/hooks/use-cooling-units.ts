@@ -47,6 +47,9 @@ export function useCrops() {
   return useApiCall("crops", () => coldtivateService.getCrops());
 }
 
-export function useCoolingUnitCrops() {
-  return useApiCall("cooling-unit-crops", () => coldtivateService.getCoolingUnitCrops());
+export function useCoolingUnitCrops(params: { coolingUnitId: number; crop: number } | null) {
+  return useApiCall(
+    params ? `cooling-unit-crops/${params.coolingUnitId}/${params.crop}` : null,
+    () => coldtivateService.getCoolingUnitCrops(params!)
+  );
 }

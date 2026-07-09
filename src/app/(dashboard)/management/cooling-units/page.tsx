@@ -145,7 +145,10 @@ function CoolingUnitFormDialog({
     setSaving(true);
     try {
       if (editUnit) {
-        await coldtivateService.updateCoolingUnit(editUnit.id, values);
+        await coldtivateService.updateCoolingUnit(editUnit.id, {
+          ...values,
+          pricingId: editUnit.commonPricingType?.pricingId,
+        });
         toast.success("Cooling unit updated successfully");
       } else {
         await coldtivateService.createCoolingUnit(values);

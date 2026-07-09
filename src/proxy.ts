@@ -19,7 +19,6 @@ const MANAGER_ROUTES = [
   "/marketplace/orders",
   "/marketplace/company-orders",
   "/account/farmer-bank-accounts",
-  "/account/marketplace-setup",
   "/account/coupons",
 ];
 
@@ -28,6 +27,7 @@ const SERVICE_PROVIDER_ROUTES = [
   "/management/locations",
   "/management/company",
   "/management/sensors",
+  "/management/marketplace-setup",
   "/account/farmer-bank-accounts",
 ];
 

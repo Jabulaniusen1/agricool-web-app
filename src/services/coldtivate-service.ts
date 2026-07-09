@@ -31,7 +31,7 @@ import {
   UserSensor,
   EcozanSensor,
   PaginatedResponse,
-  CoolingUnitCrop,
+  CoolingUnitCropEntry,
   FarmerBankAccount,
 } from "@/types/global";
 import {
@@ -55,6 +55,7 @@ import {
   LinkSensorToUserParams,
   CreateEcozenSensorParams,
   CreateMarketSurveyParams,
+  GetCoolingUnitCropsParams,
 } from "@/types/api.params";
 
 class ColdtivateService {
@@ -274,7 +275,24 @@ class ColdtivateService {
     return res.data;
   }
 
+  // The backend's create and update endpoints read crop selection from two
+  // different, incompatible keys: create() takes `crops` (a plain list of crop
+  // IDs) while update() takes `crop_updates` (a list of {id, pricing_type,
+  // fixed_rate, daily_rate} — it ignores `crops` entirely). We only collect one
+  // uniform price/type per unit in this form, so the same rate is applied to
+  // every selected crop, mirroring the mobile app's CropPricingManager.
+  private buildCropUpdates(cropIds: number[], pricingType: string, pricePerUnit: number) {
+    const backendPricingType = pricingType === "FIXED" ? "FIXED" : "PERIODICITY";
+    return cropIds.map((id) => ({
+      id,
+      pricing_type: backendPricingType,
+      fixed_rate: backendPricingType === "FIXED" ? pricePerUnit : 0,
+      daily_rate: backendPricingType === "PERIODICITY" ? pricePerUnit : 0,
+    }));
+  }
+
   async createCoolingUnit(data: CreateCoolingUnitParams): Promise<CoolingUnit> {
+    const crops = data.crops ?? [];
     const payload = {
       name: data.name,
       location: data.locationId,
@@ -282,7 +300,8 @@ class ColdtivateService {
       capacity_in_metric_tons: data.capacityInMetricTons,
       capacity_in_number_crates: data.capacityInNumberCrates,
       metric: data.metric,
-      crops: data.crops ?? [],
+      crops,
+      crop_updates: this.buildCropUpdates(crops, data.pricingType, data.pricePerUnit),
       fixed_price: data.pricingType === "FIXED",
       price: data.pricePerUnit,
       public: data.public ?? false,
@@ -313,9 +332,17 @@ class ColdtivateService {
       ...(data.capacityInMetricTons !== undefined && { capacity_in_metric_tons: data.capacityInMetricTons }),
       ...(data.capacityInNumberCrates !== undefined && { capacity_in_number_crates: data.capacityInNumberCrates }),
       ...(data.metric !== undefined && { metric: data.metric }),
-      ...(data.crops !== undefined && { crops: data.crops }),
+      ...(data.crops !== undefined && {
+        crops: data.crops,
+        crop_updates: this.buildCropUpdates(
+          data.crops,
+          data.pricingType ?? "FIXED",
+          data.pricePerUnit ?? 0
+        ),
+      }),
       ...(data.pricingType !== undefined && { fixed_price: data.pricingType === "FIXED" }),
       ...(data.pricePerUnit !== undefined && { price: data.pricePerUnit }),
+      ...(data.pricingId !== undefined && { pricing_id: data.pricingId }),
       ...(data.public !== undefined && { public: data.public }),
       ...(data.sensor && data.sensorData && {
         sensor: true,
@@ -340,8 +367,10 @@ class ColdtivateService {
     return res.data;
   }
 
-  async getCoolingUnitCrops(): Promise<CoolingUnitCrop[]> {
-    const res = await httpClient.get<CoolingUnitCrop[]>("/storage/v1/cooling-unit-crops/");
+  async getCoolingUnitCrops(params: GetCoolingUnitCropsParams): Promise<CoolingUnitCropEntry[]> {
+    const res = await httpClient.get<CoolingUnitCropEntry[]>("/storage/v1/cooling-unit-crops/", {
+      params,
+    });
     return res.data;
   }
 

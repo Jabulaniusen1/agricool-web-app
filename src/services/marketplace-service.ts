@@ -14,7 +14,6 @@ import {
   PaystackCheckoutResponse,
   PaystackPayResponse,
   DeliveryContact,
-  MarketplaceSetup,
   MarketplaceData,
   PaginatedResponse,
 } from "@/types/global";
@@ -24,7 +23,6 @@ import {
   SetPickupDetailsParams,
   PlaceOrderParams,
   SetOrderPickupDetailsParams,
-  CreateMarketplaceSetupParams,
 } from "@/types/api.params";
 import { ApiError } from "@/types/api.responses";
 
@@ -295,8 +293,10 @@ class MarketplaceService {
     return this.normalizeBanksResponse(res.data);
   }
 
-  async getPaystackAccounts(): Promise<PaystackAccount[]> {
-    const res = await httpClient.get<PaystackAccount[]>("/marketplace/seller/paystack-accounts/");
+  async getPaystackAccounts(params?: { companyId?: number }): Promise<PaystackAccount[]> {
+    const res = await httpClient.get<PaystackAccount[]>("/marketplace/seller/paystack-accounts/", {
+      params,
+    });
     return res.data;
   }
 
@@ -305,6 +305,7 @@ class MarketplaceService {
     bankCode: string;
     accountNumber: string;
     accountName: string;
+    companyId?: number;
   }): Promise<PaystackAccount> {
     const res = await httpClient.post<PaystackAccount>(
       "/marketplace/seller/paystack-accounts/",
@@ -437,18 +438,6 @@ class MarketplaceService {
       "/marketplace/company/orders",
       { params }
     );
-    return res.data;
-  }
-
-  // ─── Marketplace Setup ────────────────────────────────────────────────────────
-
-  async getMarketplaceSetup(): Promise<MarketplaceSetup> {
-    const res = await httpClient.get<MarketplaceSetup>("/marketplace/company/setup/");
-    return res.data;
-  }
-
-  async createMarketplaceSetup(data: CreateMarketplaceSetupParams): Promise<MarketplaceSetup> {
-    const res = await httpClient.post<MarketplaceSetup>("/marketplace/company/setup/", data);
     return res.data;
   }
 

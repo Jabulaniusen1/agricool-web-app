@@ -1,10 +1,10 @@
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 export enum ECropType {
-  FRUITS = "FRUITS",
-  VEGETABLES = "VEGETABLES",
-  ROOT_VEGETABLES = "ROOT_VEGETABLES",
-  OTHER = "OTHER",
+  FRUITS = 1,
+  VEGETABLES = 2,
+  ROOT_VEGETABLES = 3,
+  OTHER = 4,
 }
 
 export enum EDateCropped {
@@ -135,6 +135,7 @@ export type Pricing = {
 export type CommonPricingType = {
   pricingType: EPricingType;
   price: number;
+  pricingId?: number;
 };
 
 export type PowerOption = {
@@ -145,6 +146,17 @@ export type CoolingUnitCrop = {
   id: number;
   name: string;
   image?: string;
+};
+
+// Entry from GET /storage/v1/cooling-unit-crops/ — a crop assigned to a
+// specific cooling unit, with the crop's full details nested in `fullCrop`.
+export type CoolingUnitCropEntry = {
+  id: number;
+  fullCrop: CoolingUnitCrop;
+  active: boolean;
+  crop: number;
+  coolingUnit: number;
+  pricing: number | null;
 };
 
 export type CommodityInfo = {
@@ -703,14 +715,6 @@ export type PredictionMarket = {
   state: number;
   latitude: number;
   longitude: number;
-};
-
-export type MarketplaceSetup = {
-  id?: number;
-  company: number;
-  isSellerEnabled: boolean;
-  isBuyerEnabled: boolean;
-  paystackAccount?: number;
 };
 
 export type MarketplaceData = {

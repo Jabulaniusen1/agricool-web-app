@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useCheckInStore } from "@/stores/check-in";
-import { useCoolingUnit } from "@/hooks/use-cooling-units";
+import { useCoolingUnitCrops } from "@/hooks/use-cooling-units";
 import { ROUTES } from "@/constants/routes";
 import { ECropType } from "@/types/global";
 
-const CROP_TYPE_LABELS: Record<string, string> = {
+const CROP_TYPE_LABELS: Record<number, string> = {
   [ECropType.FRUITS]: "Fruits",
   [ECropType.VEGETABLES]: "Vegetables",
   [ECropType.ROOT_VEGETABLES]: "Root Vegetables",
@@ -20,23 +20,25 @@ const CROP_TYPE_LABELS: Record<string, string> = {
 export default function CropListPage() {
   const router = useRouter();
   const params = useParams<{ type: string }>();
-  const cropType = params.type ?? "";
+  const cropType = Number(params.type);
 
   const [search, setSearch] = useState("");
   const additionalInfoRef = useRef<Record<number, string>>({});
 
   const { coolingUnit, farmer, setPendingCrop } = useCheckInStore();
 
-  // Guard
-  if (!coolingUnit || !farmer) {
-    if (typeof window !== "undefined") router.replace(ROUTES.CHECK_IN);
-    return null;
-  }
+  // Redirect if setup isn't complete — hooks below still run unconditionally
+  useEffect(() => {
+    if (!coolingUnit || !farmer) router.replace(ROUTES.CHECK_IN);
+  }, [coolingUnit, farmer, router]);
 
-  // Fetch full cooling unit detail to get the crops list
-  // (the list endpoint returns crops: [] — only the detail endpoint populates it)
-  const { data: unitDetail, isLoading: cropsLoading } = useCoolingUnit(coolingUnit.id);
-  const crops = unitDetail?.crops ?? [];
+  // Crops assigned to this cooling unit, filtered server-side by crop type
+  const { data: cropEntries, isLoading: cropsLoading, error: cropsError, mutate: retryCrops } =
+    useCoolingUnitCrops(coolingUnit ? { coolingUnitId: coolingUnit.id, crop: cropType } : null);
+  const crops = useMemo(
+    () => (cropEntries ?? []).map((entry) => entry.fullCrop),
+    [cropEntries]
+  );
 
   const filtered = useMemo(() => {
     if (!search.trim()) return crops;
@@ -45,7 +47,9 @@ export default function CropListPage() {
     );
   }, [crops, search]);
 
-  const typeLabel = CROP_TYPE_LABELS[cropType] ?? cropType;
+  const typeLabel = CROP_TYPE_LABELS[cropType] ?? params.type ?? "";
+
+  if (!coolingUnit || !farmer) return null;
 
   return (
     <div className="max-w-lg mx-auto">
@@ -71,7 +75,20 @@ export default function CropListPage() {
         </div>
       )}
 
-      {!cropsLoading && filtered.length === 0 && (
+      {!cropsLoading && cropsError && (
+        <div className="text-center py-8 space-y-2">
+          <p className="text-sm text-destructive">Couldn&apos;t load crops. Please try again.</p>
+          <button
+            type="button"
+            className="text-sm text-green-700 underline underline-offset-2"
+            onClick={() => retryCrops()}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!cropsLoading && !cropsError && filtered.length === 0 && (
         <p className="text-center text-sm text-muted-foreground py-8">
           No crops found
         </p>

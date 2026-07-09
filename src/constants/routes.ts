@@ -14,7 +14,7 @@ export const ROUTES = {
   // Check-In flow
   CHECK_IN: "/dashboard/check-in",
   CHECK_IN_SELECT_CROP_TYPE: "/dashboard/check-in/select-crop-type",
-  CHECK_IN_CROPS: (type: string) => `/dashboard/check-in/crops/${type}`,
+  CHECK_IN_CROPS: (type: string | number) => `/dashboard/check-in/crops/${type}`,
   CHECK_IN_CRATE_SETUP: "/dashboard/check-in/crate-setup",
   CHECK_IN_CRATE_WEIGHT_PRICING: "/dashboard/check-in/crate-weight-pricing",
 
@@ -47,6 +47,7 @@ export const ROUTES = {
   MANAGEMENT_ANALYSIS: "/management/analysis",
   MANAGEMENT_FARMER_SURVEYS: "/management/farmer-surveys",
   MANAGEMENT_SENSORS: "/management/sensors",
+  MANAGEMENT_MARKETPLACE_SETUP: "/management/marketplace-setup",
 
   // Account
   ACCOUNT_PROFILE: "/account/profile",
@@ -54,7 +55,6 @@ export const ROUTES = {
   ACCOUNT_BANK_DETAILS_ADD: "/account/bank-details/add",
   ACCOUNT_COUPONS: "/account/coupons",
   ACCOUNT_FARMER_BANK_ACCOUNTS: "/account/farmer-bank-accounts",
-  ACCOUNT_MARKETPLACE_SETUP: "/account/marketplace-setup",
 
   // Marketplace extras
   MARKETPLACE_COMPANY_ORDERS: "/marketplace/company-orders",

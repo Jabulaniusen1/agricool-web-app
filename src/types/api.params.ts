@@ -92,7 +92,11 @@ export type CreateCoolingUnitParams = {
   sensorData?: SensorDatum;
 };
 
-export type UpdateCoolingUnitParams = Partial<CreateCoolingUnitParams>;
+export type UpdateCoolingUnitParams = Partial<CreateCoolingUnitParams> & {
+  // ID of the unit's existing "common"/default Pricing row — required by the
+  // backend's update endpoint (it looks this up directly and 500s if absent).
+  pricingId?: number;
+};
 
 // ─── Locations ────────────────────────────────────────────────────────────────
 
@@ -290,11 +294,9 @@ export type SetOrderPickupDetailsParams = {
   specialInstructions?: string;
 };
 
-export type CreateMarketplaceSetupParams = {
-  company: number;
-  isSellerEnabled: boolean;
-  isBuyerEnabled: boolean;
-  paystackAccount?: number;
+export type GetCoolingUnitCropsParams = {
+  coolingUnitId: number;
+  crop: number;
 };
 
 // ─── Impact ───────────────────────────────────────────────────────────────────
